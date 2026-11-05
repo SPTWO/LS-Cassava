@@ -416,6 +416,9 @@ table.pvt tr.fut td.ac{font-weight:400}
 .login-box input{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px}
 .login-box .btn{padding:11px;font-size:15px}
 .login-msg{margin:0;min-height:1.4em;font-size:13px;color:var(--crit)}
+.who-box{display:flex;flex-direction:column;align-items:center;gap:3px}
+.logout{font:inherit;font-size:11px;font-weight:600;color:var(--ink-2);background:none;border:0;padding:1px 6px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.logout:hover{color:var(--crit,#b42318)}
 .who{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border-radius:999px;padding:5px 12px;white-space:nowrap}
 body:not(.is-admin) .admin-only{display:none!important}
 body.is-admin .viewer-only{display:none!important}
@@ -482,7 +485,7 @@ td.pos{color:var(--good)}
         <select id="period" aria-label="ໄລຍະເວລາ"><option value="season">ລະດູນີ້ (ເຖິງປັດຈຸບັນ)</option></select>
         <div class="zoom" role="group" aria-label="ຂະໜາດໜ້າຈໍ"><button type="button" id="zOut" aria-label="ຊູມອອກ">−</button><button type="button" id="zReset" aria-label="ກັບຄືນ 100%">100%</button><button type="button" id="zIn" aria-label="ຊູມເຂົ້າ">+</button></div>
         <button type="button" class="btn rep-btn" id="repOpen">⤓ ດຶງ Report</button>
-        <span class="who" id="who"></span><button type="button" class="btn" id="logout">ອອກຈາກລະບົບ</button>
+        <div class="who-box"><span class="who" id="who"></span><button type="button" class="logout" id="logout">ອອກຈາກລະບົບ</button></div>
       </div>
     </div>
     <nav class="tabs" aria-label="ໝວດ">
@@ -511,7 +514,7 @@ td.pos{color:var(--good)}
         <div class="legend" style="margin-top:14px"><span><i style="background:var(--s1-ghost)"></i>ແຜນທັງໄລຍະ</span><span><i style="background:var(--s1)"></i>ຕົວຈິງ</span><span><i style="background:var(--ink);width:2px"></i>ແຜນເຖິງມື້ນີ້</span></div>
       </div>
       <div class="panel">
-        <header><h2>ປຽບທຽບໂຮງງານ</h2><p id="cmpNote"></p></header>
+        <header><h2>ປຽບທຽບທັງ 2 ໂຮງງານ</h2><p id="cmpNote"></p></header>
         <div class="tbl"><table id="cmp"></table></div>
       </div>
     </div>
@@ -522,7 +525,7 @@ td.pos{color:var(--good)}
     </div>
     <div class="grid2">
       <div class="panel">
-        <header><h2>ເກັບຊື້ມັນຕົ້ນ ລາຍເດືອນ (ໂຕນ)</h2><p>ແຜນ VS ຕົວຈິງ · ແຜນລະດູ</p></header>
+        <header><h2>ເກັບຊື້ມັນຕົ້ນ ລາຍເດືອນ (ໂຕນ)</h2><p>ແຜນ VS ຕົວຈິງ</p></header>
         <div id="chMonthlyProc"></div>
       </div>
       <div class="panel">
@@ -536,7 +539,7 @@ td.pos{color:var(--good)}
         <div id="chMonthlyExp"></div>
       </div>
       <div class="panel">
-        <header><h2>ຕົ້ນທຶນ ຕໍ່ 1 ໂຕນ ແປ້ງ</h2><p>ຢວນ/ໂຕນ · ແຜນ VS ຕົວຈິງ</p></header>
+        <header><h2>ຕົ້ນທຶນ ຕໍ່ ແປ້ງ 1 ໂຕນ</h2><p>ຢວນ/ໂຕນ · ແຜນ VS ຕົວຈິງ</p></header>
         <div class="tbl"><table id="tUnit"></table></div>
       </div>
     </div>
@@ -546,7 +549,7 @@ td.pos{color:var(--good)}
   <section class="view" id="v-procure" hidden>
     <div class="kpis hero" id="kProc"></div>
     <div class="panel">
-      <header><h2>ເກັບຊື້ມັນຕົ້ນ ແຜນ VS ຕົວຈິງ ລາຍເດືອນ ແລະ ທັງປີ</h2><p>ແຜນລະດູ · ໂຕນ</p></header>
+      <header><h2>ເກັບຊື້ມັນຕົ້ນ ແຜນ VS ຕົວຈິງ ລາຍເດືອນ ແລະ ໝົດປີ</h2><p>ແຜນລະດູ · ໂຕນ</p></header>
       <div class="kpis" id="pkProc"></div>
       <div class="grid2" style="margin-top:16px">
         <div id="pcProc"></div>
@@ -573,7 +576,7 @@ td.pos{color:var(--good)}
   <section class="view" id="v-produce" hidden>
     <div class="kpis hero" id="kProd"></div>
     <div class="panel">
-      <header><h2>ຜະລິດແປ້ງ ແຜນ VS ຕົວຈິງ ລາຍເດືອນ ແລະ ທັງປີ</h2><p>ແຜນລະດູ · ໂຕນ</p></header>
+      <header><h2>ຜະລິດແປ້ງ ແຜນ VS ຕົວຈິງ ລາຍເດືອນ ແລະ ໝົດປີ</h2><p>ແຜນລະດູ · ໂຕນ</p></header>
       <div class="kpis" id="pkProd"></div>
       <div class="grid2" style="margin-top:16px">
         <div id="pcProd"></div>
@@ -582,10 +585,10 @@ td.pos{color:var(--good)}
     </div>
     <div class="grid2">
       <div class="panel"><header><h2>ແປ້ງໄດ້ ຕໍ່ມື້ (ໂຕນ)</h2><p>ຊະນະຄາມ · ສາຍ 300T · On spec ທັງໝົດ</p></header><div id="chDaily"></div></div>
-      <div class="panel"><header><h2>ອັດຕາແປງ (ໂຕນ ມັນຕົ້ນ ຕໍ່ 1 ໂຕນ ແປ້ງ)</h2><p>ຕ່ຳກວ່າ = ດີກວ່າ · ແຜນ 3.55</p></header><div id="chConv"></div></div>
+      <div class="panel"><header><h2>ອັດຕາສ່ວນແປ້ງມັນຕົ້ນ</h2><p>ຕ່ຳກວ່າ = ດີກວ່າ · ແຜນ 3.55</p></header><div id="chConv"></div></div>
     </div>
     <div class="panel">
-      <header><h2>ບັນທຶກການຜະລິດ</h2><p>4.1 Tapioca Produced-SNK</p></header>
+      <header><h2>ບັນທຶກການຜະລິດ</h2></header>
       <div class="tbl"><table id="tProd"></table></div>
     </div>
   </section>
@@ -594,7 +597,7 @@ td.pos{color:var(--good)}
   <section class="view" id="v-sales" hidden>
     <div class="kpis hero" id="kSales"></div>
     <div class="panel">
-      <header><h2>ສົ່ງອອກແປ້ງ ແຜນ VS ຕົວຈິງ ລາຍເດືອນ ແລະ ທັງປີ</h2><p>ແຜນລະດູ · ໂຕນ</p></header>
+      <header><h2>ສົ່ງອອກແປ້ງ ແຜນ VS ຕົວຈິງ ລາຍເດືອນ ແລະ ໝົດປີ</h2><p>ແຜນລະດູ · ໂຕນ</p></header>
       <div class="kpis" id="pkExp"></div>
       <div class="grid2" style="margin-top:16px">
         <div id="pcExp"></div>
@@ -614,17 +617,17 @@ td.pos{color:var(--good)}
       </div>
     </div>
     <div class="panel">
-      <header><h2>ສັນຍາຊື້-ຂາຍແປ້ງມັນຕົ້ນ ລະດູນີ້</h2><p>5 ສັນຍາ · 2.3 Contract 26-27 · ຢວນ</p></header>
+      <header><h2>ສັນຍາຊື້-ຂາຍແປ້ງມັນຕົ້ນ ລະດູນີ້</h2></header>
       <div class="tbl"><table id="tCon"></table></div>
       <p class="issue" style="margin-top:10px">ແຕ່ລະໃບແຈ້ງໜີ້ ຫັກຄືນເງິນມັດຈຳ ຕາມ % ຂອງສັນຍາ, ສ່ວນທີ່ເຫຼືອ ລູກຄ້າຈ່າຍເປັນເງິນສົດ.</p>
     </div>
     <div class="panel">
-      <header><h2>ເງິນມັດຈຳສັນຍາ</h2><p>2.3 Contract · ຢວນ</p></header>
+      <header><h2>ເງິນມັດຈຳສັນຍາ</h2></header>
       <div class="tbl"><table id="tDep"></table></div>
       <p class="issue" style="margin-top:10px">ມັດຈຳຄົງເຫຼືອ = ໄດ້ຮັບແລ້ວ − ຫັກຈາກເງິນມັດຈຳແລ້ວ</p>
     </div>
     <div class="panel">
-      <header><h2>ການສົ່ງອອກ ຕາມໃບແຈ້ງໜີ້</h2><p>2.1 ຕິດຕາມການສົ່ງອອກ SNK</p></header>
+      <header><h2>ການສົ່ງອອກ ຕາມໃບແຈ້ງໜີ້</h2></header>
       <div class="tbl"><table id="tShip"></table></div>
     </div>
   </section>
@@ -652,7 +655,7 @@ td.pos{color:var(--good)}
   <section class="view" id="v-stock" hidden>
     <div class="kpis hero" id="kStock"></div>
     <div class="grid2">
-      <div class="panel"><header><h2>ການເຄື່ອນໄຫວສາງແປ້ງ</h2><p>V. Warehouse Report · ໂຕນ</p></header><div class="tbl"><table id="tStock"></table></div></div>
+      <div class="panel"><header><h2>ການເຄື່ອນໄຫວສາງແປ້ງ</h2></header><div class="tbl"><table id="tStock"></table></div></div>
       <div class="panel"><header><h2>ມູນຄ່າແປ້ງໃນສາງ</h2><p>ລາຄາຕາມມື້ຂົນສົ່ງອອກ</p></header><div class="tbl"><table id="tStockVal"></table></div>
         <p class="issue" style="margin-top:10px">ແປ້ງຖືກຕີລາຄາເມື່ອຂົນສົ່ງອອກ ຕາມລາຄາໃນໃບແຈ້ງໜີ້ຂອງມື້ນັ້ນ. ແປ້ງທີ່ຍັງຢູ່ໃນສາງ ປະເມີນດ້ວຍລາຄາໃບແຈ້ງໜີ້ທີ່ລໍຖ້າສົ່ງ (367-03DC, 3,650 ຢວນ/ໂຕນ).</p></div>
     </div>

@@ -158,7 +158,7 @@ function render(){
   ['ເກັບຊື້ມັນຕົ້ນ',fmt(proc,0),'ໂຕນ',`${kip(pk)} ກີບ · ${pct(tdP?proc/tdP:null)} ຂອງແຜນເຖິງມື້ນີ້`,tdP?proc/tdP:0,`ລາຄາສະເລ່ຍ ${proc?fmt(pk/proc/1000):'—'} ກີບ/kg`],
   ['ຜະລິດແປ້ງ',fmt(prod,1),'ໂຕນ',`${pct(tdD?prod/tdD:null)} ຂອງແຜນເຖິງມື້ນີ້ · ກາກມັນ ${fmt(pulp,0)} ໂຕນ`,tdD?prod/tdD:0,`ອັດຕາແປງ ${conv?fmt(conv,2):'—'} : 1 (ແຜນ ${PC?fmt(PC,2):'—'})`],
   ['ສົ່ງອອກ',fmt(exp,0),'ໂຕນ',`${pct(tdE?exp/tdE:null)} ຂອງແຜນເຖິງມື້ນີ້`,tdE?exp/tdE:0,`ມູນຄ່າ ${mcny(inv)} ລ້ານ ຢວນ`],
-  ['ກຳໄລ/ຂາດທຶນ ສຸດທິ',mcny(nAct),'ລ້ານ ຢວນ',`ແຜນ ${mcny(nPl)} ລ້ານ · ${mLbl(ixPL)}`,null,(()=>{const r=nPl?1+(nAct-nPl)/Math.abs(nPl):null;return `<span class="pill ${r>=1?'good':r>=.9?'warn':'crit'}" style="margin-top:8px">ບັນລຸ ${pct(r)}</span>`})()]
+  ['ກຳໄລ/ຂາດທຶນ ສຸດທິ',mcny(nAct),'ລ້ານ ຢວນ',`ແຜນ ${mcny(nPl)} ລ້ານ · ${mLbl(ixPL)}`,null,(()=>{const r=nPl?1+(nAct-nPl)/Math.abs(nPl):null;return `<span class="pill ${r>=1?'good':r>=.9?'warn':'crit'}" style="margin-top:8px">ປະຕິບັດໄດ້ ${pct(r)}</span>`})()]
  ].map(([l,v,u,sub,bar,r])=>`<div class="step"><div class="lbl">${l}</div><div class="big num">${v}<small>${u}</small></div><div class="sub">${sub}</div>${bar==null?'':`<div class="bar"><i style="width:${Math.min(100,bar*100)}%"></i></div>`}${String(r).startsWith('<')?r:`<span class="ratio">${r}</span>`}<span class="arrow" aria-hidden="true">→</span></div>`).join('');
 
  $('#pvaNote').textContent=pname();
@@ -182,12 +182,12 @@ function render(){
  const aInd=['salL','salF','admin','maint','support','asset','othI'].reduce((t,k)=>t+LA(k),0);
  const U=[['ລາຄາຂາຍແປ້ງ (ຕໍ່ ໂຕນ ທີ່ສົ່ງອອກ)',P_T?sumPU('rexp')/sumPU('exp'):0,A_E?LA('rexp')/A_E:0,1],
   ['ລາຍຮັບກາກມັນ (ຕໍ່ ໂຕນ ແປ້ງ)',P_T?sumPU('rpulp')/P_T:0,A_T?LA('rpulp')/A_T:0,1],
-  ['ຄ່າມັນຕົ້ນ',P_T?sumPU('raw')/P_T:0,A_T?LA('raw')/A_T:0,-1],
+  ['ຕົ້ນທຶນເກັບຊື້ມັນຕົ້ນ',P_T?sumPU('raw')/P_T:0,A_T?LA('raw')/A_T:0,-1],
   ['ຕົ້ນທຶນທາງກົງອື່ນ',P_T?sumPU('oth')/P_T:0,A_T?(LA('oth')+LA('mkt'))/A_T:0,-1],
-  ['ຕົ້ນທຶນທາງອ້ອມ (ລວມເງິນເດືອນ)',P_T?sumPU('ind')/P_T:0,A_T?aInd/A_T:0,-1],
+  ['ຕົ້ນທຶນທາງອ້ອມ',P_T?sumPU('ind')/P_T:0,A_T?aInd/A_T:0,-1],
   ['ດອກເບ້ຍ',P_T?sumPU('int')/P_T:0,A_T?LA('int')/A_T:0,-1]];
  const totP=U.slice(2).reduce((t,r)=>t+r[1],0),totA=U.slice(2).reduce((t,r)=>t+r[2],0);UNIT={totA,totP,price:U[0][2]};
- $('#tUnit').innerHTML=!A_T?'<tbody><tr><td class="src">ຍັງບໍ່ມີຂໍ້ມູນຕົ້ນທຶນ ຫຼື ການຜະລິດ ສຳລັບໄລຍະນີ້</td></tr></tbody>':`<thead><tr><th>ລາຍການ</th><th class="n">ແຜນ</th><th class="n">ຕົວຈິງ</th><th class="n">ຕ່າງ</th></tr></thead><tbody>`+
+ $('#tUnit').innerHTML=!A_T?'<tbody><tr><td class="src">ຍັງບໍ່ມີຂໍ້ມູນຕົ້ນທຶນ ຫຼື ການຜະລິດ ສຳລັບໄລຍະນີ້</td></tr></tbody>':`<thead><tr><th>ລາຍການ</th><th class="n">ແຜນ</th><th class="n">ຕົວຈິງ</th><th class="n">ສ່ວນຕ່າງ</th></tr></thead><tbody>`+
   U.map(([n,p,a,sg])=>{const d=a-p;const bad=sg>0?d<0:d>0;return `<tr><td>${n}</td><td class="n">${fmt(p)}</td><td class="n">${fmt(a)}</td><td class="n ${bad?'neg':'pos'}">${d>0?'+':''}${fmt(d)}</td></tr>`}).join('')+
   `<tr><td><b>ຕົ້ນທຶນລວມ</b></td><td class="n"><b>${fmt(totP)}</b></td><td class="n"><b>${fmt(totA)}</b></td><td class="n ${totA>totP?'neg':'pos'}"><b>${totA-totP>0?'+':''}${fmt(totA-totP)}</b></td></tr>`+
   `<tr class="total"><td>ກຳໄລ ຕໍ່ ໂຕນ</td><td class="n">${fmt(U[0][1]+U[1][1]-totP)}</td><td class="n ${U[0][2]+U[1][2]-totA<0?'neg':'pos'}">${fmt(U[0][2]+U[1][2]-totA)}</td><td></td></tr></tbody>`;
@@ -278,16 +278,16 @@ function render(){
  const seasonNet=fs.reduce((t,f)=>t+SEASON_NET[f],0);
  const nP=V2('NET','p'),nA=V2('NET','a');
  $('#kCost').innerHTML=kpi('ລາຍຮັບ '+TL,mcny(revA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(revP)} ລ້ານ · ${pct(revP?revA/revP:null)}`,status(revP?revA/revP:null))+
-  kpi('ຕົ້ນທຶນລວມ '+TL,mcny(costA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(costP)} ລ້ານ · ໃຊ້ໄປ ${pct(costP?costA/costP:null)} ຂອງແຜນ`,[achC(costA,costP)>=1?'good':achC(costA,costP)>=.9?'warn':'crit','ບັນລຸ '+pct(achC(costA,costP))])+
-  kpi('ກຳໄລ/ຂາດທຶນ ສຸດທິ '+TL,mcny(nA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(nP)} ລ້ານ · ຕ່າງ ${nA-nP>0?'+':''}${mcny(nA-nP)}`,[ach(nA,nP)>=1?'good':ach(nA,nP)>=.9?'warn':'crit','ບັນລຸ '+pct(ach(nA,nP))])+
+  kpi('ຕົ້ນທຶນລວມ '+TL,mcny(costA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(costP)} ລ້ານ · ໃຊ້ໄປ ${pct(costP?costA/costP:null)} ຂອງແຜນ`,[achC(costA,costP)>=1?'good':achC(costA,costP)>=.9?'warn':'crit','ປະຕິບັດໄດ້ '+pct(achC(costA,costP))])+
+  kpi('ກຳໄລ/ຂາດທຶນ ສຸດທິ '+TL,mcny(nA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(nP)} ລ້ານ · ສ່ວນຕ່າງ ${nA-nP>0?'+':''}${mcny(nA-nP)}`,[ach(nA,nP)>=1?'good':ach(nA,nP)>=.9?'warn':'crit','ປະຕິບັດໄດ້ '+pct(ach(nA,nP))])+
   kpi('ກຳໄລ ທັງລະດູ ຕາມແຜນ',mcny(seasonNet),'ລ້ານ ຢວນ','ລະດູ '+SEASON);
  const netPlanM=M.map((_,i)=>fs.reduce((t,f)=>t+plan[f].net[i],0)/1e6);
  barChart($('#chNet'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:netPlanM,color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:netA.map(v=>v==null?null:v/1e6),color:'var(--s1)'}],{unit:' ລ້ານ ຢວນ',dec:2,label:'ກຳໄລ/ຂາດທຶນ ລາຍເດືອນ'});
- $('#tPLf').innerHTML=`<thead><tr><th>ໂຮງງານ</th><th class="n">ລາຍຮັບ ແຜນ</th><th class="n">ລາຍຮັບ ຈິງ</th><th class="n">ຕົ້ນທຶນ ແຜນ</th><th class="n">ຕົ້ນທຶນ ຈິງ</th><th class="n">ກຳໄລ ແຜນ</th><th class="n">ກຳໄລ ຈິງ</th><th>ບັນລຸ</th></tr></thead><tbody>`+
+ $('#tPLf').innerHTML=`<thead><tr><th>ໂຮງງານ</th><th class="n">ລາຍຮັບ ແຜນ</th><th class="n">ລາຍຮັບ ຈິງ</th><th class="n">ຕົ້ນທຶນ ແຜນ</th><th class="n">ຕົ້ນທຶນ ຈິງ</th><th class="n">ກຳໄລ ແຜນ</th><th class="n">ກຳໄລ ຈິງ</th><th>ປະຕິບັດໄດ້</th></tr></thead><tbody>`+
   [['xan'],['nan'],['xan','nan']].map(F=>{const np=V2('NET','p',F),na=V2('NET','a',F);return `<tr${F.length>1?' class="total"':''}><td>${F.length>1?'ລວມ':FN[F[0]]}</td><td class="n">${mcny(V2('REV','p',F))}</td><td class="n">${mcny(V2('REV','a',F))}</td><td class="n">${mcny(COST('p',F))}</td><td class="n">${mcny(COST('a',F))}</td><td class="n">${mcny(np)}</td><td class="n ${na>=np?'pos':'neg'}">${mcny(na)}</td><td>${achPill(ach(na,np))}</td></tr>`}).join('')+'</tbody>';
  $('#plNote').textContent=`${st.f==='all'?'ລວມ 2 ໂຮງງານ':'ໂຮງງານ '+FN[st.f]} · ໜ່ວຍ: ພັນ ຢວນ`;
  const kf=v=>fmt(v/1000);
- $('#tPL').innerHTML=`<thead><tr class="g"><th rowspan="2" class="lbl">ລາຍການ</th>${COLS.map(i=>`<th class="n gm" colspan="2">${M[i]}</th>`).join('')}<th class="n gt" colspan="2">ລວມ ${TL}</th><th class="n gt" rowspan="2">ສ່ວນຕ່າງ</th><th class="gt" rowspan="2">ບັນລຸ</th></tr><tr>${COLS.map(()=>'<th class="n gm pl">ແຜນ</th><th class="n gm">ຕົວຈິງ</th>').join('')}<th class="n gt pl">ແຜນ</th><th class="n gt">ຕົວຈິງ</th></tr></thead><tbody>`+
+ $('#tPL').innerHTML=`<thead><tr class="g"><th rowspan="2" class="lbl">ລາຍການ</th>${COLS.map(i=>`<th class="n gm" colspan="2">${M[i]}</th>`).join('')}<th class="n gt" colspan="2">ລວມ ${TL}</th><th class="n gt" rowspan="2">ສ່ວນຕ່າງ</th><th class="gt" rowspan="2">ປະຕິບັດໄດ້</th></tr><tr>${COLS.map(()=>'<th class="n gm pl">ແຜນ</th><th class="n gm">ຕົວຈິງ</th>').join('')}<th class="n gt pl">ແຜນ</th><th class="n gt">ຕົວຈິງ</th></tr></thead><tbody>`+
   ROWS.map(plRow).join('')+'</tbody>';
  const plHead=$('#tPL').querySelector('thead').outerHTML;
  $('#tPLs').innerHTML=plHead+'<tbody>'+[['REV','II. ລາຍຮັບລວມ','h'],['DIR','III. ຕົ້ນທຶນທາງກົງ','h'],['IND','IV. ຕົ້ນທຶນທາງອ້ອມ','h'],['int','V. ດອກເບ້ຍທະນາຄານ','h'],['NET','ກຳໄລ/ຂາດທຶນ ສຸດທິ','n']].map(plRow).join('')+'</tbody>';
@@ -313,14 +313,14 @@ function pvaBlock(key,pre,fs){
  const td=P.reduce((t,v,i)=>t+(i<NOWI?v:i===NOWI?v*NOWFRAC:0),0);
  const left=Math.max(0,yr-ytd),mLeft=Math.max(1,M.length-NOWI);
  const pill=r=>r==null?'—':`<span class="pill ${r>=1?'good':r>=.9?'warn':'crit'}">${pct(r)}</span>`;
- $('#pk'+pre).innerHTML=kpi('ແຜນທັງປີ',fmt(yr),'ໂຕນ',`${M[0]}–${M[M.length-1]}`)+kpi('ຕົວຈິງສະສົມ',fmt(ytd,1),'ໂຕນ',`${pct(yr?ytd/yr:null)} ຂອງແຜນທັງປີ`,[yr&&ytd/yr>=1?'good':'mute','ທັງປີ '+pct(yr?ytd/yr:null)])+
-  kpi('ທຽບແຜນເຖິງມື້ນີ້',pct(td?ytd/td:null),'',`ແຜນເຖິງ ${dfmt(yday()).slice(0,5)}: ${fmt(td)} ໂຕນ`,status(td?ytd/td:null))+kpi('ຍັງເຫຼືອຕ້ອງເຮັດ',fmt(left),'ໂຕນ',`≈ ${fmt(left/mLeft)} ໂຕນ/ເດືອນ ໃນ ${mLeft} ເດືອນທີ່ເຫຼືອ`);
+ $('#pk'+pre).innerHTML=kpi('ແຜນໝົດປີ',fmt(yr),'ໂຕນ',`${M[0]}–${M[M.length-1]}`)+kpi('ຕົວຈິງສະສົມ',fmt(ytd,1),'ໂຕນ',`${pct(yr?ytd/yr:null)} ຂອງແຜນໝົດປີ`,[yr&&ytd/yr>=1?'good':'mute','ໝົດປີ '+pct(yr?ytd/yr:null)])+
+  kpi('ທຽບແຜນເຖິງມື້ນີ້',pct(td?ytd/td:null),'',`ແຜນເຖິງ ${dfmt(yday()).slice(0,5)}: ${fmt(td)} ໂຕນ`,status(td?ytd/td:null))+kpi('ຍັງເຫຼືອທີ່ຕ້ອງປະຕິບັດ',fmt(left),'ໂຕນ',`≈ ${fmt(left/mLeft)} ໂຕນ/ເດືອນ ໃນ ${mLeft} ເດືອນທີ່ເຫຼືອ`);
  barChart($('#pc'+pre),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:P,color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:A,color:'var(--s1)'}],{unit:' ໂຕນ',dec:1,label:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ'});
  let cp=0,ca=0;
- $('#pt'+pre).innerHTML=`<thead><tr><th>ເດືອນ</th><th class="n">ແຜນ</th><th class="n">ຕົວຈິງ</th><th>ບັນລຸ</th><th class="n">ແຜນສະສົມ</th><th class="n">ຈິງສະສົມ</th><th>ສະສົມ</th></tr></thead><tbody>`+
+ $('#pt'+pre).innerHTML=`<thead><tr><th>ເດືອນ</th><th class="n">ແຜນ</th><th class="n">ຕົວຈິງ</th><th>ປະຕິບັດໄດ້</th><th class="n">ແຜນສະສົມ</th><th class="n">ຈິງສະສົມ</th><th>ສະສົມ</th></tr></thead><tbody>`+
   M.map((m,i)=>{cp+=P[i];const has=A[i]!=null;if(has)ca+=A[i];
    return `<tr><td>${m}</td><td class="n">${fmt(P[i])}</td><td class="n">${has?fmt(A[i],1):'—'}</td><td>${has?pill(P[i]?A[i]/P[i]:null):i===NOWI?'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>':''}</td><td class="n">${fmt(cp)}</td><td class="n">${has?fmt(ca,1):''}</td><td>${has?pill(cp?ca/cp:null):''}</td></tr>`}).join('')+
-  `<tr class="total"><td>ທັງປີ</td><td class="n">${fmt(yr)}</td><td class="n">${fmt(ytd,1)}</td><td>${pill(yr?ytd/yr:null)}</td><td colspan="3"></td></tr></tbody>`;
+  `<tr class="total"><td>ໝົດປີ</td><td class="n">${fmt(yr)}</td><td class="n">${fmt(ytd,1)}</td><td>${pill(yr?ytd/yr:null)}</td><td colspan="3"></td></tr></tbody>`;
 }
 function plan_total(fs,k){return fs.reduce((t,f)=>t+plan[f][k].reduce((a,b)=>a+b,0),0)}
 
@@ -447,19 +447,19 @@ function toast(m){document.querySelectorAll('.toast').forEach(x=>x.remove());con
 /* ===== Reports: PDF (A4, ≤2 pages) and Excel ===== */
 const REP={
  overview:{lo:'ພາບລວມ',en:'overview',d:'ສະຫຼຸບທຸລະກິດ, ແຜນ VS ຕົວຈິງ',pages:[
-   [[{id:'flow',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ',id:'pva',leg:1,w:3},{t:'ຈຸດສຳຄັນ',notes:1,w:2}],[{t:'ປຽບທຽບໂຮງງານ',id:'cmp',w:3},{t:'ກຳໄລ/ຂາດທຶນ ແຍກໂຮງງານ (ລ້ານ ຢວນ)',id:'tPLf',w:2}]],
-   [[{t:'ເກັບຊື້ມັນຕົ້ນ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyProc'},{t:'ຜະລິດແປ້ງ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyProd'},{t:'ສົ່ງອອກແປ້ງ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyExp'}],[{t:'ກຳໄລ/ຂາດທຶນ ສຸດທິ ລາຍເດືອນ (ລ້ານ ຢວນ)',id:'chNet'},{t:'ຕົ້ນທຶນ ຕໍ່ 1 ໂຕນ ແປ້ງ (ຢວນ/ໂຕນ, ຊະນະຄາມ)',id:'tUnit'}]]]},
+   [[{id:'flow',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ',id:'pva',leg:1,w:3},{t:'ຈຸດສຳຄັນ',notes:1,w:2}],[{t:'ປຽບທຽບທັງ 2 ໂຮງງານ',id:'cmp',w:3},{t:'ກຳໄລ/ຂາດທຶນ ແຍກໂຮງງານ (ລ້ານ ຢວນ)',id:'tPLf',w:2}]],
+   [[{t:'ເກັບຊື້ມັນຕົ້ນ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyProc'},{t:'ຜະລິດແປ້ງ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyProd'},{t:'ສົ່ງອອກແປ້ງ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyExp'}],[{t:'ກຳໄລ/ຂາດທຶນ ສຸດທິ ລາຍເດືອນ (ລ້ານ ຢວນ)',id:'chNet'},{t:'ຕົ້ນທຶນ ຕໍ່ ແປ້ງ 1 ໂຕນ (ຢວນ/ໂຕນ, ຊະນະຄາມ)',id:'tUnit'}]]]},
  procure:{lo:'ເກັບຊື້ມັນຕົ້ນ',en:'procurement',d:'ປະລິມານ, ລາຄາ, ຜູ້ສົ່ງ',pages:[
-   [[{id:'kProc',plain:1}],[{id:'pkProc',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcProc',w:3},{t:'ລາຍເດືອນ ແລະ ທັງປີ (ໂຕນ)',id:'ptProc',w:2}]],
+   [[{id:'kProc',plain:1}],[{id:'pkProc',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcProc',w:3},{t:'ລາຍເດືອນ ແລະ ໝົດປີ (ໂຕນ)',id:'ptProc',w:2}]],
    [[{t:'ເກັບຊື້ ຕໍ່ມື້ (ໂຕນ)',id:'chProcDay'},{t:'ລາຄາເກັບຊື້ ຕໍ່ມື້ (ກີບ/kg)',id:'chPrice'}],[{t:'ສະຫຼຸບລາຍເດືອນ',id:'tProcM'},{t:'ຜູ້ສົ່ງມັນ ລາຍໃຫຍ່',id:'tSup'}]]]},
  produce:{lo:'ຜະລິດ',en:'production',d:'ຜົນຜະລິດ, ອັດຕາແປງ',pages:[
-   [[{id:'kProd',plain:1}],[{id:'pkProd',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcProd',w:3},{t:'ລາຍເດືອນ ແລະ ທັງປີ (ໂຕນ)',id:'ptProd',w:2}]],
-   [[{stack:[{t:'ແປ້ງໄດ້ ຕໍ່ມື້ (ໂຕນ)',id:'chDaily'},{t:'ອັດຕາແປງ (ໂຕນ ມັນ / ໂຕນ ແປ້ງ)',id:'chConv'}],w:2},{t:'ບັນທຶກການຜະລິດ',id:'tProd',w:3}]]]},
+   [[{id:'kProd',plain:1}],[{id:'pkProd',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcProd',w:3},{t:'ລາຍເດືອນ ແລະ ໝົດປີ (ໂຕນ)',id:'ptProd',w:2}]],
+   [[{stack:[{t:'ແປ້ງໄດ້ ຕໍ່ມື້ (ໂຕນ)',id:'chDaily'},{t:'ອັດຕາສ່ວນແປ້ງມັນຕົ້ນ',id:'chConv'}],w:2},{t:'ບັນທຶກການຜະລິດ',id:'tProd',w:3}]]]},
  sales:{lo:'ສົ່ງອອກ',en:'export',d:'ສົ່ງອອກ, ລາຄາ, ຕະຫຼາດ, ສັນຍາ',pages:[
-   [[{id:'kSales',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcExp',w:3},{t:'ລາຍເດືອນ ແລະ ທັງປີ (ໂຕນ)',id:'ptExp',w:2}],[{t:'ລາຄາສົ່ງອອກ ຕາມມື້ຂົນສົ່ງ (ຢວນ/ໂຕນ)',id:'chExpPrice',w:3},{t:'ຕະຫຼາດສົ່ງອອກ (ໂຕນ)',id:'mkt',leg:1,w:2}]],
+   [[{id:'kSales',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcExp',w:3},{t:'ລາຍເດືອນ ແລະ ໝົດປີ (ໂຕນ)',id:'ptExp',w:2}],[{t:'ລາຄາສົ່ງອອກ ຕາມມື້ຂົນສົ່ງ (ຢວນ/ໂຕນ)',id:'chExpPrice',w:3},{t:'ຕະຫຼາດສົ່ງອອກ (ໂຕນ)',id:'mkt',leg:1,w:2}]],
    [[{t:'ສັນຍາຊື້-ຂາຍແປ້ງມັນຕົ້ນ (ຢວນ)',id:'tCon'}],[{t:'ເງິນມັດຈຳສັນຍາ (ຢວນ)',id:'tDep'}],[{t:'ການສົ່ງອອກ ຕາມໃບແຈ້ງໜີ້ (ຢວນ)',id:'tShip'}]]]},
  cost:{lo:'ຕົ້ນທຶນ & ກຳໄລ',en:'cost-profit',d:'ງົບກຳໄລ-ຂາດທຶນ ທຽບແຜນ',pages:[
-   [[{id:'kCost',plain:1}],[{t:'ກຳໄລ/ຂາດທຶນ ສຸດທິ ລາຍເດືອນ (ລ້ານ ຢວນ)',id:'chNet',w:3},{t:'ແຍກໂຮງງານ (ລ້ານ ຢວນ)',id:'tPLf',w:2}],[{t:'ຕົ້ນທຶນ ຕໍ່ 1 ໂຕນ ແປ້ງ (ຢວນ/ໂຕນ, ຊະນະຄາມ)',id:'tUnit',w:3},{t:'ຈຸດສຳຄັນ',notes:1,w:2}]],
+   [[{id:'kCost',plain:1}],[{t:'ກຳໄລ/ຂາດທຶນ ສຸດທິ ລາຍເດືອນ (ລ້ານ ຢວນ)',id:'chNet',w:3},{t:'ແຍກໂຮງງານ (ລ້ານ ຢວນ)',id:'tPLf',w:2}],[{t:'ຕົ້ນທຶນ ຕໍ່ ແປ້ງ 1 ໂຕນ (ຢວນ/ໂຕນ, ຊະນະຄາມ)',id:'tUnit',w:3},{t:'ຈຸດສຳຄັນ',notes:1,w:2}]],
    [[{t:'ງົບກຳໄລ-ຂາດທຶນ ແຜນ VS ຕົວຈິງ (ຢວນ)',id:'tPL'}]]]},
  stock:{lo:'ສາງ',en:'stock',d:'ຍອດແປ້ງ, ກາກມັນ, ມັນຕົ້ນ',pages:[
    [[{id:'kStock',plain:1}],[{t:'ການເຄື່ອນໄຫວສາງແປ້ງ (ໂຕນ)',id:'tStock'},{t:'ມູນຄ່າແປ້ງໃນສາງ',id:'tStockVal'}]]]},
