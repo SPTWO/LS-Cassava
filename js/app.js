@@ -192,7 +192,6 @@ function render(){
   `<tr><td><b>ຕົ້ນທຶນລວມ</b></td><td class="n"><b>${fmt(totP)}</b></td><td class="n"><b>${fmt(totA)}</b></td><td class="n ${totA>totP?'neg':'pos'}"><b>${totA-totP>0?'+':''}${fmt(totA-totP)}</b></td></tr>`+
   `<tr class="total"><td>ກຳໄລ ຕໍ່ ໂຕນ</td><td class="n">${fmt(U[0][1]+U[1][1]-totP)}</td><td class="n ${U[0][2]+U[1][2]-totA<0?'neg':'pos'}">${fmt(U[0][2]+U[1][2]-totA)}</td><td></td></tr></tbody>`;
  const aProcPL=fs.reduce((t,f)=>t+ixPL.reduce((a,i)=>a+act[f].proc[i],0),0),aConv=A_T?aProcPL/A_T:null;
- $('#unitNote').textContent=A_T?`ໄລຍະ ${mLbl(ixPL)} · ແຜນ: ທັງລະດູ. ຄ່າມັນຕົ້ນ ຕໍ່ ໂຕນມັນ: ຕົວຈິງ ${fmt(LA('raw')/(aProcPL||1))} ທຽບ ແຜນ ${fmt(sumPU('raw')/(sumPU('proc')||1))} ຢວນ. ອັດຕາແປງ ${aConv?fmt(aConv,2):'—'} : 1 (ແຜນ ${PC?fmt(PC,2):'—'}).`:'';
 
  // factory comparison
  const fr=f=>{const p=sumA('proc',[f],ix),d=sumA('prod',[f],ix),e=sumA('exp',[f],ix),c=['dir','ind','int'].reduce((t,k)=>t+ixPL.reduce((a,i)=>a+act[f][k][i],0),0),td=planTD('proc',[f],ix);const ct=contracts.filter(x=>x[0]===f).reduce((t,x)=>t+x[4],0);return [FN[f],p,d,e,c,d?c/d:null,ct,td?p/td:null]};
@@ -226,7 +225,7 @@ function render(){
  if(prodRows.length)lineChart($('#chConv'),prodRows.map(r=>r[0]),prodRows.map(r=>r[5]),{lo:Math.min(3,Math.floor(Math.min(...prodRows.map(r=>r[5]))*2)/2),hi:Math.max(5.5,Math.ceil(Math.max(...prodRows.map(r=>r[5]))*2)/2),step:.5,axd:1,dec:2,unit:'ໂຕນ ມັນ / ໂຕນ ແປ້ງ',label:'ອັດຕາແປງ',target:PC,tlabel:PC?'ແຜນ '+fmt(PC,2):'',dots:true,bad:v=>v>4.5});else $('#chConv').innerHTML='<p class="issue">ຍັງບໍ່ມີຂໍ້ມູນ</p>';
  if(!prodRows.length)$('#chDaily').innerHTML='<p class="issue">ຍັງບໍ່ມີຂໍ້ມູນ</p>';
  $('#tProd').innerHTML=prodRows.length?`<thead><tr><th>ວັນທີ</th><th class="n">ມັນຕົ້ນ (kg)</th><th class="n">% ແປ້ງໃນຫົວ</th><th class="n">ຄວນໄດ້ (kg)</th><th class="n">ໄດ້ຕົວຈິງ (kg)</th><th class="n">ໄດ້/ຄວນໄດ້</th><th class="n">ອັດຕາແປງ</th><th class="n">ກາກມັນ (kg)</th><th>ສະຖານະ</th></tr></thead><tbody>`+
-  prodRows.map(r=>{const e=r[3]?r[4]/r[3]:null;const s=e>1.02?['warn','ເກີນ 100%: ກວດ']:r[5]>4.5?['crit','ສິ້ນເປືອງ']:['good','ປົກກະຕິ'];return `<tr><td>${r[0]}</td><td class="n">${fmt(r[1])}</td><td class="n">${r[2]==null?'—':fmt(r[2],1)+'%'}</td><td class="n">${fmt(r[3])}</td><td class="n">${fmt(r[4])}</td><td class="n">${pct(e)}</td><td class="n">${fmt(r[5],2)}</td><td class="n">${fmt(r[6])}</td><td><span class="pill ${s[0]}">${s[1]}</span></td></tr>`}).join('')+'</tbody>':'<tbody><tr><td class="src">ຍັງບໍ່ມີຂໍ້ມູນການຜະລິດ</td></tr></tbody>';
+  prodRows.slice().reverse().map(r=>{const e=r[3]?r[4]/r[3]:null;const s=e>1.02?['warn','ເກີນ 100%: ກວດ']:r[5]>4.5?['crit','ສິ້ນເປືອງ']:['good','ປົກກະຕິ'];return `<tr><td>${r[0]}</td><td class="n">${fmt(r[1])}</td><td class="n">${r[2]==null?'—':fmt(r[2],1)+'%'}</td><td class="n">${fmt(r[3])}</td><td class="n">${fmt(r[4])}</td><td class="n">${pct(e)}</td><td class="n">${fmt(r[5],2)}</td><td class="n">${fmt(r[6])}</td><td><span class="pill ${s[0]}">${s[1]}</span></td></tr>`}).join('')+'</tbody>':'<tbody><tr><td class="src">ຍັງບໍ່ມີຂໍ້ມູນການຜະລິດ</td></tr></tbody>';
 
  // sales
  const cs=contracts.filter(c=>fs.includes(c[0]));const S=i=>cs.reduce((t,c)=>t+(c[i]||0),0);
