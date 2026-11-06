@@ -110,7 +110,7 @@ function niceStep(r){const p=Math.pow(10,Math.floor(Math.log10(r||1)));const m=r
 const q=s=>s.replace(/"/g,'&quot;');
 
 function barChart(el,cats,series,opt={}){
- const W=560,H=opt.h||230,P={l:52,r:8,t:12,b:30};const iw=W-P.l-P.r,ih=H-P.t-P.b;
+ const VL0=opt.vl||window.__VL;const W=560,H=(opt.h||230)+(VL0==='rot'?30:VL0==='act'?10:0),P={l:52,r:8,t:VL0==='rot'?42:VL0==='act'?22:12,b:30};const iw=W-P.l-P.r,ih=H-P.t-P.b;
  const vals=series.flatMap(s=>s.data.map(v=>v||0));const max=Math.max(1,...vals),min=Math.min(0,...vals);
  const step=niceStep((max-min)/4);const top=Math.ceil(max/step)*step,bot=Math.floor(min/step)*step;
  const y=v=>P.t+ih-((v-bot)/(top-bot))*ih;const gw=iw/cats.length;const n=series.length;const bw=Math.max(3,Math.min(26,(gw*.72)/n-2));
@@ -121,6 +121,9 @@ function barChart(el,cats,series,opt={}){
   let tt=`<b>${c}</b>`;series.forEach(se=>tt+=`<br>${se.name}: ${se.data[i]==null?'—':fmt(se.data[i],opt.dec||0)}${opt.unit||''}`);
   series.forEach((se,j)=>{const v=se.data[i];if(v==null||v===0)return;const x=x0+j*(bw+2);const y0=y(0),yv=y(v);const top_=Math.min(y0,yv),hh=Math.abs(y0-yv);const r=Math.min(3,hh,bw/2);
    const c2=typeof se.color==='function'?se.color(v):se.color;
+   const VL=opt.vl||window.__VL;if(VL&&v>0){const lab=fmt(v,opt.dec&&v<100?opt.dec:0),cx=x+bw/2,isA=j===n-1;
+    if(VL==='rot')s+=`<text class="vlab" transform="translate(${cx+3.5},${yv-4}) rotate(-90)" text-anchor="start" style="font-size:10px;font-weight:${isA?700:500};fill:${isA?'var(--s1)':'var(--ink-3,#8a948d)'}">${lab}</text>`;
+    else if(VL==='act'&&isA)s+=`<text class="vlab" x="${cx}" y="${yv-5}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:var(--s1)">${lab}</text>`}
    s+=v>0?`<path d="M${x},${y0}V${yv+r}Q${x},${yv} ${x+r},${yv}H${x+bw-r}Q${x+bw},${yv} ${x+bw},${yv+r}V${y0}Z" fill="${c2}" pointer-events="none"/>`
          :`<path d="M${x},${y0}V${yv-r}Q${x},${yv} ${x+r},${yv}H${x+bw-r}Q${x+bw},${yv} ${x+bw},${yv-r}V${y0}Z" fill="${c2}" pointer-events="none"/>`});
   s+=`<rect class="hit" x="${gx}" y="${P.t}" width="${gw}" height="${ih}" data-tip="${q(tt)}"/>`;
