@@ -13,7 +13,7 @@ const isoOf=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
 let ROLE='viewer',USERNAME='';
 let SET={},SEASON='2026-27',S0=new Date(2026,8,1),NM=9,M=[],NOWI=0,NOWFRAC=0,FX=3242;
 let plan={},act={},PL={},SEASON_NET={},PU={},CMF={xan:[],nan:[]},contracts=[],SHIP=[],PROC=[],PROD=[],MOVES=[],STK={},LAST={},LOANS=[],LTX=[];
-const AK=['proc','trucks','kip','toProd','waste','prod','p25','p850','onspec','offspec','pulp','pulpSold','exp','e25','e850','inv','cash','ded','dir','ind','int'];
+const AK=['proc','trucks','kip','toProd','waste','prod','p25','p850','onspec','offspec','pulp','pulpSold','exp','e25','e850','inv','invT','cash','ded','dir','ind','int'];
 const PLK=['rexp','rpulp','raw','oth','mkt','salL','salF','admin','maint','support','asset','othI','int'];
 const mi=d=>(d.getFullYear()-S0.getFullYear())*12+d.getMonth()-S0.getMonth();
 const monthDate=i=>new Date(S0.getFullYear(),S0.getMonth()+i,1);
@@ -55,7 +55,7 @@ function buildModel(D){
   add(f,'onspec',d,(+r.onspec_kg||0)/1000);add(f,'offspec',d,(+r.offspec_kg||0)/1000);add(f,'pulp',d,(+r.pulp_kg||0)/1000)});
  MOVES.forEach(r=>{const w=(+r.weight_kg||0)/1000;if(r.kind==='pulp'){add(r.factory,'pulpSold',r.d,w);return}
   if(r.direction==='out'&&!/reprocess/i.test(r.buyer_type||'')){add(r.factory,'exp',r.d,w);add(r.factory,+r.bag_size===850?'e850':'e25',r.d,w)}});
- SHIP.forEach(r=>{add(r.factory,'inv',r.d,+r.amount||0);add(r.factory,'cash',r.d,+r.cash||0);add(r.factory,'ded',r.d,+r.deduct||0)});
+ SHIP.forEach(r=>{add(r.factory,'inv',r.d,+r.amount||0);add(r.factory,'invT',r.d,+r.tons||0);add(r.factory,'cash',r.d,+r.cash||0);add(r.factory,'ded',r.d,+r.deduct||0)});
  const pp=+SET.pulp_price||0;
  for(const fc of ['xan','nan'])for(let i=0;i<NM;i++){PL[fc].rexp.a[i]=act[fc].inv[i];PL[fc].rpulp.a[i]=act[fc].pulpSold[i]*pp}
  CMF={xan:[],nan:[]};
@@ -180,7 +180,7 @@ function render(){
 
  // unit economics (actual months with cost data vs season plan)
  const sumPU=k=>fs.reduce((t,f)=>t+PU[f][k],0),P_T=sumPU('prod');const LA=k=>fs.reduce((t,f)=>t+ixPL.reduce((a,i)=>a+PL[f][k].a[i],0),0);
- const A_T=fs.reduce((t,f)=>t+ixPL.reduce((a,i)=>a+act[f].prod[i],0),0),A_E=fs.reduce((t,f)=>t+ixPL.reduce((a,i)=>a+act[f].exp[i],0),0);
+ const A_T=fs.reduce((t,f)=>t+ixPL.reduce((a,i)=>a+act[f].prod[i],0),0),A_E=fs.reduce((t,f)=>t+ixPL.reduce((a,i)=>a+act[f].invT[i],0),0);
  const aInd=['salL','salF','admin','maint','support','asset','othI'].reduce((t,k)=>t+LA(k),0);
  const U=[['ລາຄາຂາຍແປ້ງ (ຕໍ່ ໂຕນ ທີ່ສົ່ງອອກ)',P_T?sumPU('rexp')/sumPU('exp'):0,A_E?LA('rexp')/A_E:0,1],
   ['ລາຍຮັບກາກມັນ (ຕໍ່ ໂຕນ ແປ້ງ)',P_T?sumPU('rpulp')/P_T:0,A_T?LA('rpulp')/A_T:0,1],
@@ -233,7 +233,7 @@ function render(){
  const cs=contracts.filter(c=>fs.includes(c[0]));const S=i=>cs.reduce((t,c)=>t+(c[i]||0),0);
  const cT=S(4),cDep=S(6),cRecv=S(10),cInvT=S(7),cOff=S(9),cBal=cRecv-cOff,cOwe=cDep-cRecv;
  $('#kSales').innerHTML=kpi('ສົ່ງອອກ (ອອກສາງ)',fmt(exp),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdE)} ໂຕນ`,status(tdE?exp/tdE:null))+kpi('ສັນຍາທັງໝົດ',fmt(cT),'ໂຕນ',`${cs.length} ສັນຍາ · ${pct(cT/plan_total(fs,'prod'))} ຂອງແຜນຜະລິດທັງລະດູ`)+
-  kpi('ລາຄາສົ່ງອອກສະເລ່ຍ',exp?fmt(sumA('inv',fs,ix)/exp):'—','ຢວນ/ໂຕນ',exp?`ຕາມມື້ສົ່ງອອກ · ຊ່ວງ ${(()=>{const pr=SHIP.filter(s=>fs.includes(s.factory)&&s.price>0).map(s=>+s.price);return pr.length?fmt(Math.min(...pr))+'–'+fmt(Math.max(...pr)):'—'})()} · ມູນຄ່າ ${mcny(sumA('inv',fs,ix))} ລ້ານ`:'ຍັງບໍ່ມີການສົ່ງອອກ')+
+  kpi('ລາຄາສົ່ງອອກສະເລ່ຍ',sumA('invT',fs,ix)?fmt(sumA('inv',fs,ix)/sumA('invT',fs,ix)):'—','ຢວນ/ໂຕນ',exp?`ຕາມມື້ສົ່ງອອກ · ຊ່ວງ ${(()=>{const pr=SHIP.filter(s=>fs.includes(s.factory)&&s.price>0).map(s=>+s.price);return pr.length?fmt(Math.min(...pr))+'–'+fmt(Math.max(...pr)):'—'})()} · ມູນຄ່າ ${mcny(sumA('inv',fs,ix))} ລ້ານ`:'ຍັງບໍ່ມີການສົ່ງອອກ')+
   kpi('ສິນຄ້າຄ້າງສາງ',fmt(stockT,1),'ໂຕນ',stockT?`ແປ້ງ · 25 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s25,0),1)} · 850 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s850,0),1)} · ກາກມັນ ${fmt(fs.reduce((t,f)=>t+STK[f].pulp,0),2)} ໂຕນ`:'ບໍ່ມີສິນຄ້າໃນສາງ');
  $('#tCon').innerHTML=`<thead><tr><th>ເລກທີສັນຍາ</th><th>ຜູ້ຊື້</th><th>ໂຮງງານ</th><th class="n">ປະລິມານ (ໂຕນ)</th><th class="n">ມູນຄ່າສັນຍາ (ຢວນ)</th><th class="n">% ຫັກຈາກລາຍຮັບ</th><th>ສົ່ງອອກແລ້ວ</th></tr></thead><tbody>`+
   cs.map(c=>`<tr><td class="mono">${c[1]}</td><td>${c[2]}<div class="src">${c[3]}</div></td><td>${FN[c[0]]}</td><td class="n">${fmt(c[4])}</td><td class="n">${c[12]?fmt(c[12]):'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>'}</td><td class="n">${c[11]==null?'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>':`<b>${pct(c[11])}</b>`}</td><td><span class="mini"><i style="width:${c[7]/c[4]*100}%"></i></span>${fmt(c[7])} ໂຕນ (${pct(c[7]/c[4])})</td></tr>`).join('')+
@@ -488,7 +488,7 @@ function notesHTML(){
   ['ຜະລິດແປ້ງ',P('prod')?pd/P('prod'):null,`${fmt(pd,1)} / ${fmt(P('prod'))} ໂຕນ`,`ອັດຕາແປງ ${conv?fmt(conv,2):'—'} : 1 · ແຜນ ${planConv(fs)?fmt(planConv(fs),2):'—'}`],
   ['ສົ່ງອອກແປ້ງ',P('exp')?ex/P('exp'):null,`${fmt(ex)} / ${fmt(P('exp'))} ໂຕນ`,`ມູນຄ່າ ${mcny(sumA('inv',fs,ix))} ລ້ານ ຢວນ`],
   ['ກຳໄລ/ຂາດທຶນ ສຸດທິ',ixPL.length?ach(nA,nP):null,ixPL.length?`${mcny(nA)} / ${mcny(nP)} ລ້ານ ຢວນ`:'ຍັງບໍ່ມີຂໍ້ມູນ','ຕົວຈິງ / ແຜນ'],
-  (()=>{const e=fs.reduce((t,f)=>t+PU[f].exp,0),pp=e?fs.reduce((t,f)=>t+PU[f].rexp,0)/e:0,ap=ex?sumA('inv',fs,ix)/ex:null;return ['ລາຄາຂາຍແປ້ງ',ap?ap/pp:null,ap?`${fmt(ap)} / ${fmt(pp)} ຢວນ/ໂຕນ`:'ຍັງບໍ່ມີການສົ່ງອອກ','ສະເລ່ຍ ຕາມມື້ສົ່ງອອກ']})()];
+  (()=>{const e=fs.reduce((t,f)=>t+PU[f].exp,0),pp=e?fs.reduce((t,f)=>t+PU[f].rexp,0)/e:0,ap=sumA('invT',fs,ix)?sumA('inv',fs,ix)/sumA('invT',fs,ix):null;return ['ລາຄາຂາຍແປ້ງ',ap?ap/pp:null,ap?`${fmt(ap)} / ${fmt(pp)} ຢວນ/ໂຕນ`:'ຍັງບໍ່ມີການສົ່ງອອກ','ສະເລ່ຍ ຕາມມື້ສົ່ງອອກ']})()];
  return `<div class="rn">${it.map(([t,r,v,d])=>{const c=r==null?'mute':r>=1?'good':r>=.9?'warn':'crit';const ic=c==='good'?'✓':c==='warn'?'!':c==='crit'?'✕':'–';
   return `<div class="rn-i ${c}"><span class="rn-ic">${ic}</span><div class="rn-b"><div class="rn-h"><b>${t}</b><span class="rn-v">${r==null?'—':pct(r)}</span></div><div class="rn-bar"><i style="width:${r==null?0:Math.max(0,Math.min(1,r))*100}%"></i></div><div class="rn-d"><span>${v}</span><span>${d}</span></div></div></div>`}).join('')}</div>`}
 function cloneBlock(b){
