@@ -62,6 +62,8 @@ function buildModel(D){
  D.costs.forEach(r=>{const fc=r.factory,i=mi(toDate(r.month));if(i<0||i>=NM||!PL[fc]||!PL[fc][r.category])return;PL[fc][r.category].a[i]+=+r.amount||0;if(!CMF[fc].includes(i))CMF[fc].push(i);
   const g=r.category==='int'?'int':['raw','oth','mkt'].includes(r.category)?'dir':'ind';act[fc][g][i]+=+r.amount||0});
  CMF.xan.sort((a,b)=>a-b);CMF.nan.sort((a,b)=>a-b);
+ // P&L counts closed months only: the current month joins once it has ended
+ {const ni=mi(new Date()),closed=ni>=NM?NM:Math.max(0,ni);CMF.xan=CMF.xan.filter(i=>i<closed);CMF.nan=CMF.nan.filter(i=>i<closed)}
  // contracts
  contracts=D.cons.map(c=>{const sh=SHIP.filter(s=>(s.contract_no||'').startsWith(c.contract_no));
   return [c.factory,c.contract_no,c.customer||'',c.grade||'',+c.tons||0,'',+c.deposit_total||0,sh.reduce((t,s)=>t+(+s.tons||0),0),sh.reduce((t,s)=>t+(+s.amount||0),0),sh.reduce((t,s)=>t+(+s.deduct||0),0),+c.deposit_received||0,c.deduct_pct==null?null:+c.deduct_pct,c.value==null?null:+c.value,c.note||'',c.destination||'']});
