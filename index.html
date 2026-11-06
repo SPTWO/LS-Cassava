@@ -243,6 +243,7 @@ th{background:var(--surface-2);color:var(--forest)}
 .rep-t,.rep-f{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px}
 .rep-t span,.rep-f span{font-size:11.5px;color:var(--ink-3)}
 .rep-t[aria-pressed="true"],.rep-f[aria-pressed="true"]{border-color:var(--s1);background:#f1f9ef;box-shadow:inset 0 0 0 1px var(--s1)}
+.rep-t[aria-pressed="true"] b::before{content:"✓ ";color:var(--s1)}
 .rep-t.rep-all{grid-column:1/-1;background:#f1f9ef;border-style:dashed}
 .rep-t.rep-all[aria-pressed="true"]{border-style:solid}
 .rep-fmt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -753,7 +754,7 @@ td.pos{color:var(--good)}
   <div class="rep-box">
     <div class="rep-top"><h2 id="repTitle">ດຶງ Report</h2><button type="button" class="rep-x" id="repClose" aria-label="ປິດ">✕</button></div>
     <p class="rep-sub" id="repScope"></p>
-    <div class="rep-label">ເລືອກ Report</div>
+    <div class="rep-label">ເລືອກ Report <span style="font-weight:400;color:var(--ink-2)">(ເລືອກໄດ້ຫຼາຍອັນ)</span></div>
     <div class="rep-grid" id="repTypes"></div>
     <div class="rep-label">ຮູບແບບໄຟລ໌</div>
     <div class="rep-fmt">

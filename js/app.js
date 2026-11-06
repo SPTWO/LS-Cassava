@@ -472,16 +472,16 @@ const REP={
    [[{id:'kStock',plain:1}],[{t:'ການເຄື່ອນໄຫວສາງແປ້ງ (ໂຕນ)',id:'tStock'},{t:'ມູນຄ່າແປ້ງໃນສາງ',id:'tStockVal'}]]]},
  debt:{lo:'ພັນທະໜີ້ສິນ',en:'debt',d:'ເງິນກູ້, ຍອດເຫຼືອ, ການເບີກ-ຊຳລະ',pages:[
    [[{id:'kDebt',plain:1}],[{t:'ເງິນກູ້ທະນາຄານ',id:'tDebt'}],[{t:'ການນຳໃຊ້ເງິນກູ້ ແລະ ຍອດໜີ້',id:'chBal',w:2},{t:'ປະຫວັດການເບີກ ແລະ ຊຳລະ',id:'tTx',w:3}]]]}};
-const rs={type:'overview',fmt:'pdf'};
+const rs={sel:['overview'],fmt:'pdf'};
 const loadScript=src=>new Promise((ok,no)=>{if(document.querySelector(`script[src="${src}"]`))return ok();const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error('load'));document.head.appendChild(e)});
 function scopeText(){return `${st.f==='all'?'ພາບລວມ 2 ໂຮງງານ':'ໂຮງງານ '+FN[st.f]} · ${pname()}`}
-function openRep(){const h=location.hash.slice(1);if(REP[h])rs.type=h;$('#repScope').textContent='ໃຊ້ຕົວກອງທີ່ເລືອກຢູ່: '+scopeText();drawTypes();$('#repStatus').textContent='';$('#repModal').hidden=false;$('#repGo').focus()}
-function drawTypes(){$('#repTypes').innerHTML=Object.entries(REP).map(([k,r])=>`<button type="button" class="rep-t" data-t="${k}" aria-pressed="${k===rs.type}"><b>${r.lo}</b><span>${r.d}</span></button>`).join('')+`<button type="button" class="rep-t rep-all" data-t="all" aria-pressed="${rs.type==='all'}"><b>ລວມທຸກ Report</b><span>ທຸກໜ້າ ຕໍ່ກັນ ເປັນໄຟລ໌ດຽວ</span></button>`}
+function openRep(){const h=location.hash.slice(1);rs.sel=[REP[h]?h:'overview'];$('#repScope').textContent='ໃຊ້ຕົວກອງທີ່ເລືອກຢູ່: '+scopeText();drawTypes();$('#repStatus').textContent='';$('#repModal').hidden=false;$('#repGo').focus()}
+function drawTypes(){$('#repTypes').innerHTML=Object.entries(REP).map(([k,r])=>`<button type="button" class="rep-t" data-t="${k}" aria-pressed="${rs.sel.includes(k)}"><b>${r.lo}</b><span>${r.d}</span></button>`).join('')+`<button type="button" class="rep-t rep-all" data-t="all" aria-pressed="${rs.sel.length===REP_ORDER.length}"><b>ລວມທຸກ Report</b><span>ທຸກໜ້າ ຕໍ່ກັນ ເປັນໄຟລ໌ດຽວ</span></button>`}
 $('#repOpen').addEventListener('click',openRep);
 $('#repClose').addEventListener('click',()=>$('#repModal').hidden=true);
 $('#repModal').addEventListener('click',e=>{if(e.target.id==='repModal')$('#repModal').hidden=true});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#repModal').hidden=true});
-$('#repTypes').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b){rs.type=b.dataset.t;drawTypes()}});
+$('#repTypes').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;const t=b.dataset.t;if(t==='all')rs.sel=rs.sel.length===REP_ORDER.length?[]:REP_ORDER.slice();else rs.sel=rs.sel.includes(t)?rs.sel.filter(x=>x!==t):REP_ORDER.filter(x=>x===t||rs.sel.includes(x));drawTypes()});
 document.querySelectorAll('.rep-f').forEach(b=>b.addEventListener('click',()=>{rs.fmt=b.dataset.fmt;document.querySelectorAll('.rep-f').forEach(x=>x.setAttribute('aria-pressed',x===b))}));
 function notesHTML(){
  const fs=facs(),ix=idxs();const P=k=>planTD(k,fs,ix),A=k=>sumA(k,fs,ix);
@@ -523,13 +523,13 @@ async function makePDF(type){
  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
  if(document.fonts&&document.fonts.ready)await document.fonts.ready;
  const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',orientation:'landscape',compress:true});
- const types=type==='all'?REP_ORDER:[type];const total=types.reduce((t,k)=>t+REP[k].pages.length,0);let start=0,first=true;
+ const types=Array.isArray(type)?type:type==='all'?REP_ORDER:[type];const total=types.reduce((t,k)=>t+REP[k].pages.length,0);let start=0,first=true;
  for(const t of types){const pages=buildPages(t,start,total);start+=pages.length;
-  for(let i=0;i<pages.length;i++){if(type==='all')$('#repStatus').textContent=`ກຳລັງສ້າງ PDF … ໜ້າ ${start-pages.length+i+1} / ${total}`;
-   const cv=await window.html2canvas(pages[i],{scale:type==='all'?3:3.5,backgroundColor:'#ffffff',useCORS:true,logging:false});if(!first)pdf.addPage();first=false;pdf.addImage(cv.toDataURL('image/png'),'PNG',0,0,297,210,undefined,'FAST')}}
+  for(let i=0;i<pages.length;i++){if(types.length>1)$('#repStatus').textContent=`ກຳລັງສ້າງ PDF … ໜ້າ ${start-pages.length+i+1} / ${total}`;
+   const cv=await window.html2canvas(pages[i],{scale:types.length>1?3:3.5,backgroundColor:'#ffffff',useCORS:true,logging:false});if(!first)pdf.addPage();first=false;pdf.addImage(cv.toDataURL('image/png'),'PNG',0,0,297,210,undefined,'FAST')}}
  $('#repStage').innerHTML='';return pdf.output('arraybuffer')}
 function makeXLSX(type){
- if(type==='all')return makeXLSXAll();
+ if(Array.isArray(type))return makeXLSXAll(type);if(type==='all')return makeXLSXAll();
  const r=REP[type],wb=XLSX.utils.book_new();const used=new Set();
  const info=[['Report',r.lo],['ບໍລິສັດ','LS Trading Export-Import Co., Ltd'],['ໂຮງງານ',st.f==='all'?'ພາບລວມ 2 ໂຮງງານ':FN[st.f]],['ໄລຍະ',pname()],['ອອກ Report',dfmt(new Date())],['ແຜນ','ແຜນລະດູ '+SEASON],['ຕົວຈິງ','Summary Monthly Report 2026-2027'],[]];
  r.pages.flat(2).forEach(b=>{const el=b.id&&document.getElementById(b.id);if(!el)return;el.querySelectorAll('.kpi').forEach(k=>info.push([k.querySelector('.lbl')?.textContent.trim(),k.querySelector('.v')?.textContent.trim(),k.querySelector('.d')?.textContent.trim()]));
@@ -543,15 +543,15 @@ function makeXLSX(type){
  M.forEach((m,i)=>rows.push([m,...['proc','prod','exp'].flatMap(k=>[+fs.reduce((t,f)=>t+plan[f][k][i],0).toFixed(1),i<NOWI?+fs.reduce((t,f)=>t+act[f][k][i],0).toFixed(1):null])]));
  if(['overview','procure','produce','sales'].includes(type))XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ');
  return XLSX.write(wb,{bookType:'xlsx',type:'array'})}
-function makeXLSXAll(){
+function makeXLSXAll(LIST=REP_ORDER){
  const wb=XLSX.utils.book_new();const used=new Set();
- const info=[['Report','ລວມທຸກ Report'],['ບໍລິສັດ','LS Trading Export-Import Co., Ltd'],['ໂຮງງານ',st.f==='all'?'ພາບລວມ 2 ໂຮງງານ':FN[st.f]],['ໄລຍະ',pname()],['ອອກ Report',dfmt(new Date())],[]];
- REP_ORDER.forEach(t=>{const r=REP[t];info.push([`— ${r.lo} —`]);r.pages.flat(2).flatMap(b=>b.stack?b.stack:[b]).forEach(b=>{const el=b.id&&document.getElementById(b.id);if(!el)return;
+ const info=[['Report',LIST.length===REP_ORDER.length?'ລວມທຸກ Report':LIST.map(t=>REP[t].lo).join(' + ')],['ບໍລິສັດ','LS Trading Export-Import Co., Ltd'],['ໂຮງງານ',st.f==='all'?'ພາບລວມ 2 ໂຮງງານ':FN[st.f]],['ໄລຍະ',pname()],['ອອກ Report',dfmt(new Date())],[]];
+ LIST.forEach(t=>{const r=REP[t];info.push([`— ${r.lo} —`]);r.pages.flat(2).flatMap(b=>b.stack?b.stack:[b]).forEach(b=>{const el=b.id&&document.getElementById(b.id);if(!el)return;
   el.querySelectorAll('.kpi').forEach(k=>info.push([k.querySelector('.lbl')?.textContent.trim(),k.querySelector('.v')?.textContent.trim(),k.querySelector('.d')?.textContent.trim()]));
   el.querySelectorAll('.step').forEach(k=>info.push([k.querySelector('.lbl')?.textContent.trim(),k.querySelector('.big')?.textContent.trim(),k.querySelector('.sub')?.textContent.trim()]))});info.push([])});
  const ws0=XLSX.utils.aoa_to_sheet(info);ws0['!cols']=[{wch:30},{wch:22},{wch:52}];XLSX.utils.book_append_sheet(wb,ws0,'ສະຫຼຸບ');used.add('ສະຫຼຸບ');
  const SH={overview:'ພາບລວມ',procure:'ເກັບຊື້',produce:'ຜະລິດ',sales:'ສົ່ງອອກ',cost:'ຕົ້ນທຶນ',stock:'ສາງ',debt:'ໜີ້ສິນ'};const seen=new Set();
- REP_ORDER.forEach(t=>REP[t].pages.flat(2).flatMap(b=>b.stack?b.stack:[b]).forEach(b=>{if(!b.id||!b.t||seen.has(b.id))return;const el=document.getElementById(b.id);if(!el||el.tagName!=='TABLE')return;seen.add(b.id);
+ LIST.forEach(t=>REP[t].pages.flat(2).flatMap(b=>b.stack?b.stack:[b]).forEach(b=>{if(!b.id||!b.t||seen.has(b.id))return;const el=document.getElementById(b.id);if(!el||el.tagName!=='TABLE')return;seen.add(b.id);
   let name=(SH[t]+' · '+b.t).replace(/[\\\/\?\*\[\]:]/g,' ').slice(0,31).trim();let k=2;while(used.has(name)){name=name.slice(0,28)+'_'+k++}used.add(name);
   XLSX.utils.book_append_sheet(wb,XLSX.utils.table_to_sheet(el,{raw:false}),name)}));
  const fs=facs();const rows=[['ເດືອນ','ແຜນ ເກັບຊື້ (ໂຕນ)','ຕົວຈິງ ເກັບຊື້ (ໂຕນ)','ແຜນ ຜະລິດ (ໂຕນ)','ຕົວຈິງ ຜະລິດ (ໂຕນ)','ແຜນ ສົ່ງອອກ (ໂຕນ)','ຕົວຈິງ ສົ່ງອອກ (ໂຕນ)']];
@@ -563,8 +563,9 @@ $('#repGo').addEventListener('click',async()=>{
  const go=$('#repGo'),stt=$('#repStatus');go.disabled=true;stt.textContent=rs.fmt==='pdf'?'ກຳລັງສ້າງ PDF …':'ກຳລັງສ້າງ Excel …';
  try{
   if(rs.fmt==='xlsx'&&!window.XLSX)throw new Error('xlsx');
-  const data=rs.fmt==='pdf'?await makePDF(rs.type):makeXLSX(rs.type);
-  const fname=`LS_Report_${rs.type==='all'?'all-reports':REP[rs.type].en}_${st.f==='all'?'all':st.f==='xan'?'SNK':'MN'}_${isoOf(new Date())}.${rs.fmt}`;
+  if(!rs.sel.length){stt.textContent='ເລືອກ Report ຢ່າງໜ້ອຍ 1 ອັນ';return}
+  const RT=rs.sel.length===1?rs.sel[0]:rs.sel;const data=rs.fmt==='pdf'?await makePDF(RT):makeXLSX(RT);
+  const fname=`LS_Report_${rs.sel.length===REP_ORDER.length?'all-reports':rs.sel.map(t=>REP[t].en).join('+')}_${st.f==='all'?'all':st.f==='xan'?'SNK':'MN'}_${isoOf(new Date())}.${rs.fmt}`;
   const url=URL.createObjectURL(new Blob([data],{type:rs.fmt==='pdf'?'application/pdf':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);stt.textContent='ດາວໂຫຼດແລ້ວ: '+fname;
  }catch(err){console.error(err);const c=err&&err.code;stt.textContent=c==='declined'?'ຍົກເລີກການບັນທຶກ.':c==='rate_limited'?'ມີໜ້າຕ່າງບັນທຶກເປີດຢູ່ແລ້ວ. ລໍຖ້າແລ້ວລອງໃໝ່.':(err&&err.message==='load')?'ໂຫຼດເຄື່ອງມືສ້າງ PDF ບໍ່ສຳເລັດ. ກວດອິນເຕີເນັດ ແລ້ວລອງໃໝ່.':'ສ້າງ Report ບໍ່ສຳເລັດ. ລອງໃໝ່ອີກຄັ້ງ.'}
  finally{go.disabled=false}});
