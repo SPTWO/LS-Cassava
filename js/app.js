@@ -110,8 +110,8 @@ function niceStep(r){const p=Math.pow(10,Math.floor(Math.log10(r||1)));const m=r
 const q=s=>s.replace(/"/g,'&quot;');
 
 function barChart(el,cats,series,opt={}){
- const VL0=opt.vl||window.__VL;const W=560,H=(opt.h||230)+(VL0==='rot'?30:VL0==='act'?10:0),P={l:52,r:8,t:VL0==='rot'?42:VL0==='act'?22:12,b:30};const iw=W-P.l-P.r,ih=H-P.t-P.b;
  const vals=series.flatMap(s=>s.data.map(v=>v||0));const max=Math.max(1,...vals),min=Math.min(0,...vals);
+ const VL=!!opt.vl,neg=VL&&min<0;const W=560,H=(opt.h||230)+(VL?30:0)+(neg?36:0),P={l:52,r:8,t:VL?42:12,b:30+(neg?36:0)};const iw=W-P.l-P.r,ih=H-P.t-P.b;
  const step=niceStep((max-min)/4);const top=Math.ceil(max/step)*step,bot=Math.floor(min/step)*step;
  const y=v=>P.t+ih-((v-bot)/(top-bot))*ih;const gw=iw/cats.length;const n=series.length;const bw=Math.max(3,Math.min(26,(gw*.72)/n-2));
  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${opt.label||''}">`;
@@ -121,9 +121,8 @@ function barChart(el,cats,series,opt={}){
   let tt=`<b>${c}</b>`;series.forEach(se=>tt+=`<br>${se.name}: ${se.data[i]==null?'—':fmt(se.data[i],opt.dec||0)}${opt.unit||''}`);
   series.forEach((se,j)=>{const v=se.data[i];if(v==null||v===0)return;const x=x0+j*(bw+2);const y0=y(0),yv=y(v);const top_=Math.min(y0,yv),hh=Math.abs(y0-yv);const r=Math.min(3,hh,bw/2);
    const c2=typeof se.color==='function'?se.color(v):se.color;
-   const VL=opt.vl||window.__VL;if(VL&&v>0){const lab=fmt(v,opt.dec&&v<100?opt.dec:0),cx=x+bw/2,isA=j===n-1;
-    if(VL==='rot')s+=`<text class="vlab" transform="translate(${cx+3.5},${yv-4}) rotate(-90)" text-anchor="start" style="font-size:10px;font-weight:${isA?700:500};fill:${isA?'var(--s1)':'var(--ink-3,#8a948d)'}">${lab}</text>`;
-    else if(VL==='act'&&isA)s+=`<text class="vlab" x="${cx}" y="${yv-5}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:var(--s1)">${lab}</text>`}
+   if(VL){const lab=fmt(v,opt.dec&&Math.abs(v)<100?opt.dec:0),cx=x+bw/2,isA=j===n-1;
+    s+=`<text class="vlab" transform="translate(${cx+3.5},${v>0?yv-4:yv+4}) rotate(-90)" text-anchor="${v>0?'start':'end'}" style="font-size:10px;font-weight:${isA?700:500};fill:${isA?(v<0?'var(--crit,#b42318)':'var(--s1)'):'var(--ink-3,#8a948d)'}">${lab}</text>`}
    s+=v>0?`<path d="M${x},${y0}V${yv+r}Q${x},${yv} ${x+r},${yv}H${x+bw-r}Q${x+bw},${yv} ${x+bw},${yv+r}V${y0}Z" fill="${c2}" pointer-events="none"/>`
          :`<path d="M${x},${y0}V${yv-r}Q${x},${yv} ${x+r},${yv}H${x+bw-r}Q${x+bw},${yv} ${x+bw},${yv-r}V${y0}Z" fill="${c2}" pointer-events="none"/>`});
   s+=`<rect class="hit" x="${gx}" y="${P.t}" width="${gw}" height="${ih}" data-tip="${q(tt)}"/>`;
@@ -175,9 +174,9 @@ function render(){
 
  const ser=k=>M.map((_,i)=>fs.reduce((t,f)=>t+(plan[f][k][i]||0),0));
  const sera=k=>M.map((_,i)=>i>NOWI?null:fs.reduce((t,f)=>t+(act[f][k][i]||0),0));
- barChart($('#chMonthlyProc'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:ser('proc'),color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:sera('proc'),color:'var(--s1)'}],{unit:' ໂຕນ',label:'ເກັບຊື້ລາຍເດືອນ'});
- barChart($('#chMonthlyExp'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:ser('exp'),color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:sera('exp'),color:'var(--s1)'}],{unit:' ໂຕນ',label:'ສົ່ງອອກລາຍເດືອນ'});
- barChart($('#chMonthlyProd'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:ser('prod'),color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:sera('prod'),color:'var(--s1)'}],{unit:' ໂຕນ',dec:1,label:'ຜະລິດລາຍເດືອນ'});
+ barChart($('#chMonthlyProc'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:ser('proc'),color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:sera('proc'),color:'var(--s1)'}],{unit:' ໂຕນ',label:'ເກັບຊື້ລາຍເດືອນ',vl:1});
+ barChart($('#chMonthlyExp'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:ser('exp'),color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:sera('exp'),color:'var(--s1)'}],{unit:' ໂຕນ',label:'ສົ່ງອອກລາຍເດືອນ',vl:1});
+ barChart($('#chMonthlyProd'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:ser('prod'),color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:sera('prod'),color:'var(--s1)'}],{unit:' ໂຕນ',dec:1,label:'ຜະລິດລາຍເດືອນ',vl:1});
 
  // unit economics (actual months with cost data vs season plan)
  const sumPU=k=>fs.reduce((t,f)=>t+PU[f][k],0),P_T=sumPU('prod');const LA=k=>fs.reduce((t,f)=>t+ixPL.reduce((a,i)=>a+PL[f][k].a[i],0),0);
@@ -285,7 +284,7 @@ function render(){
   kpi('ກຳໄລ/ຂາດທຶນ ສຸດທິ '+TL,mcny(nA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(nP)} ລ້ານ · ສ່ວນຕ່າງ ${nA-nP>0?'+':''}${mcny(nA-nP)}`,[ach(nA,nP)>=1?'good':ach(nA,nP)>=.9?'warn':'crit','ປະຕິບັດໄດ້ '+pct(ach(nA,nP))])+
   kpi('ກຳໄລ ທັງລະດູ ຕາມແຜນ',mcny(seasonNet),'ລ້ານ ຢວນ','ລະດູ '+SEASON);
  const netPlanM=M.map((_,i)=>fs.reduce((t,f)=>t+plan[f].net[i],0)/1e6);
- barChart($('#chNet'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:netPlanM,color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:netA.map(v=>v==null?null:v/1e6),color:'var(--s1)'}],{unit:' ລ້ານ ຢວນ',dec:2,label:'ກຳໄລ/ຂາດທຶນ ລາຍເດືອນ'});
+ barChart($('#chNet'),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:netPlanM,color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:netA.map(v=>v==null?null:v/1e6),color:'var(--s1)'}],{unit:' ລ້ານ ຢວນ',dec:2,label:'ກຳໄລ/ຂາດທຶນ ລາຍເດືອນ',vl:1});
  $('#tPLf').innerHTML=`<thead><tr><th>ໂຮງງານ</th><th class="n">ລາຍຮັບ ແຜນ</th><th class="n">ລາຍຮັບ ຈິງ</th><th class="n">ຕົ້ນທຶນ ແຜນ</th><th class="n">ຕົ້ນທຶນ ຈິງ</th><th class="n">ກຳໄລ ແຜນ</th><th class="n">ກຳໄລ ຈິງ</th><th>ປະຕິບັດໄດ້</th></tr></thead><tbody>`+
   [['xan'],['nan'],['xan','nan']].map(F=>{const np=V2('NET','p',F),na=V2('NET','a',F);return `<tr${F.length>1?' class="total"':''}><td>${F.length>1?'ລວມ':FN[F[0]]}</td><td class="n">${mcny(V2('REV','p',F))}</td><td class="n">${mcny(V2('REV','a',F))}</td><td class="n">${mcny(COST('p',F))}</td><td class="n">${mcny(COST('a',F))}</td><td class="n">${mcny(np)}</td><td class="n ${na>=np?'pos':'neg'}">${mcny(na)}</td><td>${achPill(ach(na,np))}</td></tr>`}).join('')+'</tbody>';
  $('#plNote').textContent=`${st.f==='all'?'ລວມ 2 ໂຮງງານ':'ໂຮງງານ '+FN[st.f]} · ໜ່ວຍ: ພັນ ຢວນ`;
@@ -318,7 +317,7 @@ function pvaBlock(key,pre,fs){
  const pill=r=>r==null?'—':`<span class="pill ${r>=1?'good':r>=.9?'warn':'crit'}">${pct(r)}</span>`;
  $('#pk'+pre).innerHTML=kpi('ແຜນໝົດປີ',fmt(yr),'ໂຕນ',`${M[0]}–${M[M.length-1]}`)+kpi('ຕົວຈິງສະສົມ',fmt(ytd,1),'ໂຕນ',`${pct(yr?ytd/yr:null)} ຂອງແຜນໝົດປີ`,[yr&&ytd/yr>=1?'good':'mute','ໝົດປີ '+pct(yr?ytd/yr:null)])+
   kpi('ທຽບແຜນເຖິງມື້ນີ້',pct(td?ytd/td:null),'',`ແຜນເຖິງ ${dfmt(yday()).slice(0,5)}: ${fmt(td)} ໂຕນ`,status(td?ytd/td:null))+kpi('ຍັງເຫຼືອທີ່ຕ້ອງປະຕິບັດ',fmt(left),'ໂຕນ',`≈ ${fmt(left/mLeft)} ໂຕນ/ເດືອນ ໃນ ${mLeft} ເດືອນທີ່ເຫຼືອ`);
- barChart($('#pc'+pre),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:P,color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:A,color:'var(--s1)'}],{unit:' ໂຕນ',dec:1,label:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ'});
+ barChart($('#pc'+pre),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:P,color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:A,color:'var(--s1)'}],{unit:' ໂຕນ',dec:1,label:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ',vl:1});
  let cp=0,ca=0;
  $('#pt'+pre).innerHTML=`<thead><tr><th>ເດືອນ</th><th class="n">ແຜນ</th><th class="n">ຕົວຈິງ</th><th>ປະຕິບັດໄດ້</th><th class="n">ແຜນສະສົມ</th><th class="n">ຈິງສະສົມ</th><th>ສະສົມ</th></tr></thead><tbody>`+
   M.map((m,i)=>{cp+=P[i];const has=A[i]!=null;if(has)ca+=A[i];
