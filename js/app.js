@@ -661,7 +661,11 @@ const DOMAIN=CFG.usernameDomain||'ls.local';
 function showLogin(msg){$('#app').hidden=true;$('#login').hidden=false;$('#loginMsg').textContent=msg||'';setTimeout(()=>$('#lgUser').focus(),50)}
 function buildPeriodOpts(){const sel=$('#period');sel.innerHTML=`<option value="season">ລະດູ ${SEASON} (ເຖິງປັດຈຸບັນ)</option>`+[...Array(NOWI+1).keys()].map(i=>`<option value="${i}">${M[i]}</option>`).join('');
  if(st.p!=='season'&&!(+st.p<=NOWI))st.p='season';sel.value=st.p}
-async function refreshAll(){await loadAll();buildPeriodOpts();render();renderDebt()}
+async function refreshAll(){await loadAll();buildPeriodOpts();render();renderDebt();window.dispatchEvent(new Event('ls:data'))}
+// data for the 3D factory model (js/factory3d-scene.js)
+window.LS_3D=()=>{const out={};for(const fc of ['xan','nan']){const S=STK[fc]||{},A=act[fc]||{};const sum=k=>(A[k]||[]).reduce((a,b)=>a+(b||0),0);const proc=sum('proc'),prod=sum('prod'),exp=sum('exp');
+ const ds=PROC.filter(r=>r.factory===fc&&r.d).map(r=>+r.d);const last=ds.length?new Date(Math.max(...ds)):null;
+ out[fc]={s25:Math.max(0,S.s25||0),s850:Math.max(0,S.s850||0),pulp:Math.max(0,S.pulp||0),raw:Math.max(0,S.raw||0),proc,prod,exp,conv:prod?proc/prod:null,last:dfmt(last),ok:prod>0,status:prod>0?'ກຳລັງຜະລິດ':proc>0?'ເລີ່ມເກັບຊື້':'ລໍຖ້າເລີ່ມລະດູ'}}return out};
 async function startApp(session){
  $('#login').hidden=true;$('#app').hidden=false;$('#loading').hidden=false;
  USERNAME=(session.user.email||'').split('@')[0];
