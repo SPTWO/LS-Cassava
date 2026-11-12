@@ -434,6 +434,18 @@ td.pos{color:var(--good)}
 .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
 </style>
 
+<style id="cycle-style">
+#cyc{position:relative;background:linear-gradient(180deg,#eaf5fb 0%,#f6fbf4 45%,#eef6ea 100%);border-radius:14px;overflow:hidden}
+#cyc .cyc-bar{position:absolute;z-index:3;right:14px;bottom:14px;display:flex;gap:6px}
+#cyc .cyc-bar button{border:1px solid #e3e9e1;background:#fff;border-radius:9px;padding:6px 11px;font:600 12.5px "Noto Sans Lao",sans-serif;color:#4b5d51;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+#cyc .cyc-bar button[aria-pressed=true]{background:#17733d;border-color:#17733d;color:#fff}
+#cyc .cyc-bar svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#cyc .cyc-scroll{overflow-x:auto}
+#road{display:block;width:100%;min-width:900px;height:auto}
+#road text{font-family:"Noto Sans Lao",sans-serif}
+#cyc .cyc-hint{display:none;text-align:center;font-size:12px;color:#4b5d51;padding:6px 0 10px}
+@media (max-width:900px){#cyc .cyc-hint{display:block}}
+</style>
 <style id="theme-v2">
 /* ===== Mockup v2: refined green & white ===== */
 .band,main{
@@ -553,12 +565,12 @@ button,a,select{cursor:pointer}
       </div>
     </div>
     <nav class="tabs" aria-label="ໝວດ">
-      <a href="#overview">ພາບລວມ</a>
+      <a href="#overview">ພາບລວມທຸລະກິດ</a>
       <a href="#procure">ເກັບຊື້ມັນຕົ້ນ</a>
       <a href="#produce">ຜະລິດ</a>
       <a href="#sales">ສົ່ງອອກ</a>
       <a href="#cost">ຕົ້ນທຶນ & ກຳໄລ</a>
-      <a href="#stock">ສາງ</a>
+      <a href="#stock">ພາບລວມໂຮງງານ</a>
       <a href="#debt">ພັນທະໜີ້ສິນ</a>
       <a href="#import" class="admin-only">ນຳເຂົ້າ Excel</a>
     </nav>
@@ -717,6 +729,9 @@ button,a,select{cursor:pointer}
 
   <!-- STOCK -->
   <section class="view" id="v-stock" hidden>
+    <div class="panel"><header><h2>ວົງຈອນທຸລະກິດ ຜະລິດ ແລະ ສົ່ງອອກແປ້ງມັນຕົ້ນ ໄປປະເທດຈີນ</h2><p>ໄລຍະເວລາສະເລ່ຍ 13–19 ມື້ ຕໍ່ຮອບ</p></header>
+      <div id="cyc"><div class="cyc-bar"><button id="cPlay" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg><span>ຢຸດ</span></button><button id="cFast" aria-pressed="false">×2</button></div>
+      <div class="cyc-scroll"><svg id="road" viewBox="0 0 1280 850" role="img" aria-label="ວົງຈອນທຸລະກິດ 7 ຂັ້ນຕອນ"></svg></div><div class="cyc-hint">← ເລື່ອນຊ້າຍ-ຂວາ ເພື່ອເບິ່ງທັງໝົດ →</div></div></div>
     <div class="kpis hero" id="kStock"></div>
     <div class="grid2">
       <div class="panel"><header><h2>ການເຄື່ອນໄຫວສາງແປ້ງ</h2></header><div class="tbl"><table id="tStock"></table></div></div>
@@ -832,5 +847,6 @@ button,a,select{cursor:pointer}
 
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
+<script src="js/cycle.js"></script>
 </body>
 </html>
