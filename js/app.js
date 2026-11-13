@@ -354,9 +354,9 @@ function inSeason(d){return d&&d>=S0&&d<monthDate(NM+3)}
 const P={};
 P.procurements=(rows,fac)=>{const h=findHdr(rows,['ເລກບີນ']);if(h<0)return null;const H=rows[h];
  const c={d:ci(H,'ວັນທີ'),sup:ci(H,'ລາຍຊື່'),acc:ci(H,'ຊື້ເຈົ້'),tk:ci(H,'ເລກບີນ'),tr:ci(H,'ທະບຽນລົດ'),g:ci(H,'ຈຳນວນເຂົ້າລານ'),n:ci(H,'ຈຳນວນຮັບເຂົ້າຕົວຈີ່ງ'),p:ci(H,'ລາຄາ'),a:ci(H,'ຈຳນວນເງີນ'),tp:ci(H,'ເຄື່ອນຍ້າຍ'),w:ci(H,'ມັນເສຍ')};
- const out=[];rows.slice(h+1).forEach(r=>{const d=parseDate(r[c.d]);if(!inSeason(d))return;const n=num(r[c.n]),a=num(r[c.a]);if(!n&&!a)return;
+ const out=[];rows.slice(h+1).forEach(r=>{const d=parseDate(r[c.d]);if(!inSeason(d))return;const n=num(r[c.n]),a=num(r[c.a]),tp=c.tp>=0?num(r[c.tp]):0,w=c.w>=0?num(r[c.w]):0;if(!n&&!a&&!tp&&!w)return;
   out.push({season:SEASON,factory:fac,date:isoOf(d),supplier:r[c.sup]!=null?String(r[c.sup]).trim():null,account_name:r[c.acc]!=null?String(r[c.acc]).trim():null,ticket_no:r[c.tk]!=null?String(r[c.tk]):null,truck:r[c.tr]!=null?String(r[c.tr]):null,
-   gross_kg:num(r[c.g]),net_kg:n,price:num(r[c.p]),amount:a,to_prod_kg:c.tp>=0?num(r[c.tp]):0,waste_kg:c.w>=0?num(r[c.w]):0})});return out};
+   gross_kg:num(r[c.g]),net_kg:n,price:num(r[c.p]),amount:a,to_prod_kg:tp,waste_kg:w})});return out};
 P.production=(rows,fac)=>{const h=findHdr(rows,['ຮັບມັນຕົ້ນດິບເຂົ້າ']);if(h<0)return null;const H=rows[h];
  const c={d:ci(H,'入库日期'),sh:ci(H,'ຊ່ວງການຜະລິດ'),ln:ci(H,'生产线'),raw:ci(H,'原材料'),nr:ci(H,'ມັນດີບລົບສີງເຈືອປົນອອກ','kg'),st:ci(H,'淀粉含量','ເປີເຊັນ'),ex:ci(H,'ແປ້ງທີ່ຄວນໄດ້'),
   p25:ci(H,'ແປງດີ 25'),p850:ci(H,'ແປງດີ 850'),on:ci(H,'onspecfood'),off:ci(H,'offspecrenew'),out:ci(H,'ແປງທີ່ຜະລິດໄດ້'),pulp:ci(H,'ກາກມັນ','kg')};
