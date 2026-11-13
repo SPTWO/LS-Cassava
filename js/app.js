@@ -58,11 +58,12 @@ function buildModel(D){
  SHIP.forEach(r=>{add(r.factory,'inv',r.d,+r.amount||0);add(r.factory,'invT',r.d,+r.tons||0);add(r.factory,'cash',r.d,+r.cash||0);add(r.factory,'ded',r.d,+r.deduct||0)});
  const pp=+SET.pulp_price||0;
  // revenue is recognised when starch leaves the warehouse: each out-ton takes the price of the
- // oldest invoice lot (Sheet 2.1) of the same customer; tons without a lot wait for a price
+ // oldest invoice lot by lot number (Sheet 2.1) of the same customer; tons without a lot wait for a price
  {const fw=x=>String(x||'').trim().split(/\s+/)[0].toLowerCase(),cu={};
   D.cons.forEach(c=>{if(fw(c.customer))cu[c.factory+'|'+c.contract_no]=fw(c.customer)});
   const lots={};SHIP.forEach(s=>{const c=D.cons.find(c=>c.factory===s.factory&&(s.contract_no||'').startsWith(c.contract_no));const k=c&&cu[c.factory+'|'+c.contract_no];
-   if(!k||!(+s.tons>0))return;(lots[s.factory+'|'+k]=lots[s.factory+'|'+k]||[]).push({t:+s.tons,px:(+s.amount||0)/(+s.tons)})});
+   if(!k||!(+s.tons>0))return;(lots[s.factory+'|'+k]=lots[s.factory+'|'+k]||[]).push({n:String(s.invoice_no||s.contract_no||''),t:+s.tons,px:(+s.amount||0)/(+s.tons)})});
+  Object.values(lots).forEach(L=>L.sort((a,b)=>a.n.localeCompare(b.n,undefined,{numeric:true})));
   MOVES.filter(r=>r.kind==='starch'&&r.direction==='out'&&!/reprocess/i.test(r.buyer_type||'')).sort((a,b)=>a.d-b.d).forEach(r=>{
    let w=(+r.weight_kg||0)/1000;const L=lots[r.factory+'|'+fw(r.company)]||[];
    while(w>1e-9&&L.length){const q=Math.min(w,L[0].t);add(r.factory,'rev',r.d,q*L[0].px);add(r.factory,'revT',r.d,q);w-=q;L[0].t-=q;if(L[0].t<1e-9)L.shift()}})}
