@@ -12,9 +12,10 @@ const toDate=s=>s?new Date(String(s).slice(0,10)+'T00:00:00'):null;
 const isoOf=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
 let ROLE='viewer',USERNAME='';
 let SET={},SEASON='2026-27',S0=new Date(2026,8,1),NM=9,M=[],NOWI=0,NOWFRAC=0,FX=3242;
-let plan={},act={},PL={},SEASON_NET={},PU={},CMF={xan:[],nan:[]},contracts=[],SHIP=[],PROC=[],PROD=[],MOVES=[],STK={},LAST={},LOANS=[],LTX=[],OUT_NC={xan:0,nan:0};
+let plan={},act={},PL={},SEASON_NET={},PU={},CMF={xan:[],nan:[]},contracts=[],SHIP=[],PROC=[],PROD=[],MOVES=[],STK={},LAST={},LOANS=[],LTX=[],OUT_NC={xan:0,nan:0},ADV={xan:0,nan:0},PEND={xan:0,nan:0};
 const AK=['proc','trucks','kip','toProd','waste','prod','p25','p850','onspec','offspec','pulp','pulpSold','exp','e25','e850','inv','invT','rev','revT','cash','ded','dir','ind','int'];
 const PLK=['rexp','rpulp','raw','oth','mkt','salL','salF','admin','maint','support','asset','othI','int'];
+const owe=fs=>{const a=fs.reduce((t,f)=>t+ADV[f],0),p=fs.reduce((t,f)=>t+PEND[f],0),o=[];if(a>0.05)o.push(`ໄດ້ເງິນແລ້ວ ຍັງບໍ່ສົ່ງ ${fmt(a,1)} ໂຕນ`);if(p>0.05)o.push(`ສົ່ງແລ້ວ ລໍຖ້າລາຄາ ${fmt(p,1)} ໂຕນ`);return o.join(' · ')||'ສົ່ງ ແລະ ໃບແຈ້ງໜີ້ ກົງກັນ'};
 const mi=d=>(d.getFullYear()-S0.getFullYear())*12+d.getMonth()-S0.getMonth();
 const monthDate=i=>new Date(S0.getFullYear(),S0.getMonth()+i,1);
 async function fetchAll(table,filter){
@@ -59,14 +60,15 @@ function buildModel(D){
  const pp=+SET.pulp_price||0;
  // revenue is recognised when starch leaves the warehouse: each out-ton takes the price of the
  // oldest invoice lot by lot number (Sheet 2.1) of the same customer; tons without a lot wait for a price
- {const fw=x=>String(x||'').trim().split(/\s+/)[0].toLowerCase(),cu={};
+ {const fw=x=>String(x||'').trim().split(/\s+/)[0].toLowerCase(),cu={};PEND={xan:0,nan:0};
   D.cons.forEach(c=>{if(fw(c.customer))cu[c.factory+'|'+c.contract_no]=fw(c.customer)});
   const lots={};SHIP.forEach(s=>{const c=D.cons.find(c=>c.factory===s.factory&&(s.contract_no||'').startsWith(c.contract_no));const k=c&&cu[c.factory+'|'+c.contract_no];
    if(!k||!(+s.tons>0))return;(lots[s.factory+'|'+k]=lots[s.factory+'|'+k]||[]).push({n:String(s.invoice_no||s.contract_no||''),t:+s.tons,px:(+s.amount||0)/(+s.tons)})});
   Object.values(lots).forEach(L=>L.sort((a,b)=>a.n.localeCompare(b.n,undefined,{numeric:true})));
   MOVES.filter(r=>r.kind==='starch'&&r.direction==='out'&&!/reprocess/i.test(r.buyer_type||'')).sort((a,b)=>a.d-b.d).forEach(r=>{
    let w=(+r.weight_kg||0)/1000;const L=lots[r.factory+'|'+fw(r.company)]||[];
-   while(w>1e-9&&L.length){const q=Math.min(w,L[0].t);add(r.factory,'rev',r.d,q*L[0].px);add(r.factory,'revT',r.d,q);w-=q;L[0].t-=q;if(L[0].t<1e-9)L.shift()}})}
+   while(w>1e-9&&L.length){const q=Math.min(w,L[0].t);add(r.factory,'rev',r.d,q*L[0].px);add(r.factory,'revT',r.d,q);w-=q;L[0].t-=q;if(L[0].t<1e-9)L.shift()}if(w>1e-9&&PEND[r.factory]!=null)PEND[r.factory]+=w});
+  ADV={xan:0,nan:0};Object.entries(lots).forEach(([k,L])=>{const f=k.split('|')[0];if(ADV[f]!=null)ADV[f]+=L.reduce((t,l)=>t+l.t,0)})}
  for(const fc of ['xan','nan'])for(let i=0;i<NM;i++){PL[fc].rexp.a[i]=act[fc].rev[i];PL[fc].rpulp.a[i]=act[fc].pulpSold[i]*pp}
  CMF={xan:[],nan:[]};
  D.costs.forEach(r=>{const fc=r.factory,i=mi(toDate(r.month));if(i<0||i>=NM||!PL[fc]||!PL[fc][r.category])return;PL[fc][r.category].a[i]+=+r.amount||0;if(!CMF[fc].includes(i))CMF[fc].push(i);
@@ -173,7 +175,7 @@ function render(){
  $('#flow').innerHTML=[
   ['ເກັບຊື້ມັນຕົ້ນ',fmt(proc,0),'ໂຕນ',`${kip(pk)} ກີບ · ${pct(tdP?proc/tdP:null)} ຂອງແຜນເຖິງມື້ນີ້`,tdP?proc/tdP:0,`ລາຄາສະເລ່ຍ ${proc?fmt(pk/proc/1000):'—'} ກີບ/kg`],
   ['ຜະລິດແປ້ງ',fmt(prod,1),'ໂຕນ',`${pct(tdD?prod/tdD:null)} ຂອງແຜນເຖິງມື້ນີ້ · ກາກມັນ ${fmt(pulp,0)} ໂຕນ`,tdD?prod/tdD:0,`ອັດຕາແປງ ${conv?fmt(conv,2):'—'} : 1 (ແຜນ ${PC?fmt(PC,2):'—'})`],
-  ['ສົ່ງອອກ',fmt(exp,0),'ໂຕນ',`${pct(tdE?exp/tdE:null)} ຂອງແຜນເຖິງມື້ນີ້`,tdE?exp/tdE:0,`ໃບແຈ້ງໜີ້ ${fmt(sumA('invT',fs,ix))} ໂຕນ · ${mcny(inv)} ລ້ານ ຢວນ`],
+  ['ສົ່ງອອກ',fmt(exp,0),'ໂຕນ',`${pct(tdE?exp/tdE:null)} ຂອງແຜນເຖິງມື້ນີ້`,tdE?exp/tdE:0,owe(fs)],
   ['ກຳໄລ/ຂາດທຶນ ສຸດທິ',mcny(nAct),'ລ້ານ ຢວນ',`ແຜນ ${mcny(nPl)} ລ້ານ · ${mLbl(ixPL)}`,null,(()=>{const r=nPl?1+(nAct-nPl)/Math.abs(nPl):null;return `<span class="pill ${r>=1?'good':r>=.9?'warn':'crit'}" style="margin-top:8px">ປະຕິບັດໄດ້ ${pct(r)}</span>`})()]
  ].map(([l,v,u,sub,bar,r])=>`<div class="step"><div class="lbl">${l}</div><div class="big num">${v}<small>${u}</small></div><div class="sub">${sub}</div>${bar==null?'':`<div class="bar"><i style="width:${Math.min(100,bar*100)}%"></i></div>`}${String(r).startsWith('<')?r:`<span class="ratio">${r}</span>`}<span class="arrow" aria-hidden="true">→</span></div>`).join('');
 
@@ -246,7 +248,7 @@ function render(){
  // sales
  const cs=contracts.filter(c=>fs.includes(c[0]));const S=i=>cs.reduce((t,c)=>t+(c[i]||0),0);
  const cT=S(4),cDep=S(6),cRecv=S(10),cInvT=S(7),cOff=S(9),cBal=cRecv-cOff,cOwe=cDep-cRecv;
- $('#kSales').innerHTML=kpi('ສົ່ງອອກ (ອອກສາງ)',fmt(exp),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdE)} ໂຕນ<br>ອອກໃບແຈ້ງໜີ້ແລ້ວ ${fmt(sumA('invT',fs,ix))} ໂຕນ · ສົ່ງແລ້ວ ລໍຖ້າລາຄາ ${fmt(Math.max(0,exp-sumA('revT',fs,ix)))} ໂຕນ`,status(tdE?exp/tdE:null))+kpi('ສັນຍາທັງໝົດ',fmt(cT),'ໂຕນ',`${cs.length} ສັນຍາ · ${pct(cT/plan_total(fs,'prod'))} ຂອງແຜນຜະລິດທັງລະດູ`)+
+ $('#kSales').innerHTML=kpi('ສົ່ງອອກ (ອອກສາງ)',fmt(exp),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdE)} ໂຕນ<br>${owe(fs)}`,status(tdE?exp/tdE:null))+kpi('ສັນຍາທັງໝົດ',fmt(cT),'ໂຕນ',`${cs.length} ສັນຍາ · ${pct(cT/plan_total(fs,'prod'))} ຂອງແຜນຜະລິດທັງລະດູ`)+
   kpi('ລາຄາສົ່ງອອກສະເລ່ຍ',sumA('invT',fs,ix)?fmt(sumA('inv',fs,ix)/sumA('invT',fs,ix)):'—','ຢວນ/ໂຕນ',exp?`ຕາມມື້ສົ່ງອອກ · ຊ່ວງ ${(()=>{const pr=SHIP.filter(s=>fs.includes(s.factory)&&s.price>0).map(s=>+s.price);return pr.length?fmt(Math.min(...pr))+'–'+fmt(Math.max(...pr)):'—'})()} · ມູນຄ່າໃບແຈ້ງໜີ້ ${mcny(sumA('inv',fs,ix))} ລ້ານ`:'ຍັງບໍ່ມີການສົ່ງອອກ')+
   kpi('ສິນຄ້າຄ້າງສາງ',fmt(stockT,1),'ໂຕນ',stockT?`ແປ້ງ · 25 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s25,0),1)} · 850 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s850,0),1)} · ກາກມັນ ${fmt(fs.reduce((t,f)=>t+STK[f].pulp,0),2)} ໂຕນ`:'ບໍ່ມີສິນຄ້າໃນສາງ');
  $('#tCon').innerHTML=`<thead><tr><th>ເລກທີສັນຍາ</th><th>ຜູ້ຊື້</th><th>ໂຮງງານ</th><th class="n">ປະລິມານ (ໂຕນ)</th><th class="n">ມູນຄ່າສັນຍາ (ຢວນ)</th><th class="n">% ຫັກຈາກລາຍຮັບ</th><th>ອອກສາງ (ໂຕນ)</th><th class="n">ອອກໃບແຈ້ງໜີ້ (ໂຕນ)</th><th class="n">ລໍຖ້າໃບແຈ້ງໜີ້ (ໂຕນ)</th></tr></thead><tbody>`+
@@ -501,7 +503,7 @@ function notesHTML(){
  const it=[
   ['ເກັບຊື້ມັນຕົ້ນ',P('proc')?pr/P('proc'):null,`${fmt(pr)} / ${fmt(P('proc'))} ໂຕນ`,'ທຽບແຜນເຖິງມື້ນີ້'],
   ['ຜະລິດແປ້ງ',P('prod')?pd/P('prod'):null,`${fmt(pd,1)} / ${fmt(P('prod'))} ໂຕນ`,`ອັດຕາແປງ ${conv?fmt(conv,2):'—'} : 1 · ແຜນ ${planConv(fs)?fmt(planConv(fs),2):'—'}`],
-  ['ສົ່ງອອກແປ້ງ',P('exp')?ex/P('exp'):null,`${fmt(ex)} / ${fmt(P('exp'))} ໂຕນ`,`ໃບແຈ້ງໜີ້ ${fmt(sumA('invT',fs,ix))} ໂຕນ · ${mcny(sumA('inv',fs,ix))} ລ້ານ ຢວນ`],
+  ['ສົ່ງອອກແປ້ງ',P('exp')?ex/P('exp'):null,`${fmt(ex)} / ${fmt(P('exp'))} ໂຕນ`,owe(fs)],
   ['ກຳໄລ/ຂາດທຶນ ສຸດທິ',ixPL.length?ach(nA,nP):null,ixPL.length?`${mcny(nA)} / ${mcny(nP)} ລ້ານ ຢວນ`:'ຍັງບໍ່ມີຂໍ້ມູນ','ຕົວຈິງ / ແຜນ'],
   (()=>{const e=fs.reduce((t,f)=>t+PU[f].exp,0),pp=e?fs.reduce((t,f)=>t+PU[f].rexp,0)/e:0,ap=sumA('invT',fs,ix)?sumA('inv',fs,ix)/sumA('invT',fs,ix):null;return ['ລາຄາຂາຍແປ້ງ',ap?ap/pp:null,ap?`${fmt(ap)} / ${fmt(pp)} ຢວນ/ໂຕນ`:'ຍັງບໍ່ມີການສົ່ງອອກ','ສະເລ່ຍ ຕາມມື້ສົ່ງອອກ']})()];
  return `<div class="rn">${it.map(([t,r,v,d])=>{const c=r==null?'mute':r>=1?'good':r>=.9?'warn':'crit';const ic=c==='good'?'✓':c==='warn'?'!':c==='crit'?'✕':'–';
