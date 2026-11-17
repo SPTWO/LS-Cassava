@@ -422,9 +422,7 @@ function parseWorkbook(wb,file){
    data[sp.key][fac]=(data[sp.key][fac]||[]).concat(v);
    const ds=v.map(r=>r.date||r.month).sort();res.push({name:n,kind:'ok',lo:sp.lo,table:sp.key==='costs'?'cost_entries':sp.key,rows:v.length,fac:FN[fac],from:ds[0],to:ds[ds.length-1]});
   }catch(e){res.push({name:n,kind:'error',lo:sp.lo,note:e.message})}});
- // interest booked in both cost sheets for the same month = one shared amount → split 50/50
- if(SET.interest_split!==false&&data.costs.xan&&data.costs.nan){const ix=data.costs.xan.filter(r=>r.category==='int'),in_=data.costs.nan.filter(r=>r.category==='int');
-  ix.forEach(a=>{const b=in_.find(x=>x.month===a.month&&Math.abs(x.amount-a.amount)<1);if(b){a.amount/=2;b.amount/=2;res.push({name:'—',kind:'note',note:`ດອກເບ້ຍ ${a.month.slice(0,7)}: ${fmt(a.amount*2)} ລົງທັງ 2 ໂຮງງານ → ແບ່ງ 50/50`})}})}
+ // interest in each cost sheet is already that factory's own share: import as is
  PARSED={file,data,res};return res}
 const fmtD=s=>s?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4):'—';
 function showResults(file,res){
