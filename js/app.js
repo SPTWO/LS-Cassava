@@ -297,7 +297,7 @@ function render(){
  const seasonNet=fs.reduce((t,f)=>t+SEASON_NET[f],0);
  const nP=V2('NET','p'),nA=V2('NET','a');
  $('#kCost').innerHTML=kpi('ລາຍຮັບ '+TL,mcny(revA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(revP)} ລ້ານ · ${pct(revP?revA/revP:null)}`,status(revP?revA/revP:null))+
-  kpi('ຕົ້ນທຶນລວມ '+TL,mcny(costA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(costP)} ລ້ານ · ໃຊ້ໄປ ${pct(costP?costA/costP:null)} ຂອງແຜນ`,[achC(costA,costP)>=1?'good':achC(costA,costP)>=.9?'warn':'crit','ປະຕິບັດໄດ້ '+pct(achC(costA,costP))])+
+  kpi('ຕົ້ນທຶນລວມ '+TL,mcny(costA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(costP)} ລ້ານ · ໃຊ້ໄປ ${pct(costP?costA/costP:null)} ຂອງແຜນ`,(costP&&costA>costP?['over','ເກີນແຜນ']:[achC(costA,costP)>=1?'good':achC(costA,costP)>=.9?'warn':'crit','ປະຕິບັດໄດ້ '+pct(achC(costA,costP))]))+
   kpi('ກຳໄລ/ຂາດທຶນ ສຸດທິ '+TL,mcny(nA),'ລ້ານ ຢວນ',`ແຜນ ${mcny(nP)} ລ້ານ · ສ່ວນຕ່າງ ${nA-nP>0?'+':''}${mcny(nA-nP)}`,[ach(nA,nP)>=1?'good':ach(nA,nP)>=.9?'warn':'crit','ປະຕິບັດໄດ້ '+pct(ach(nA,nP))])+
   kpi('ກຳໄລ ທັງລະດູ ຕາມແຜນ',mcny(seasonNet),'ລ້ານ ຢວນ','ລະດູ '+SEASON);
  const netPlanM=M.map((_,i)=>fs.reduce((t,f)=>t+plan[f].net[i],0)/1e6);
@@ -315,7 +315,7 @@ function render(){
    const isCost=t==='c'||(t==='h'&&k!=='REV')||k==='int';const good=isCost?d<=0:d>=0;
    const r=!P?null:isCost?achC(A,P):(t==='m'||t==='n')?ach(A,P):A/P;
    const neg=v=>(t==='m'||t==='n')&&v<0?' neg':'';
-   return `<tr class="r-${t}"><td class="lbl">${n}</td>${COLS.map((_,j)=>`<td class="n pl${j?' gs':''}">${F(p[j])}</td><td class="n ac${neg(a[j])}">${F(a[j])}</td>`).join('')}<td class="n pl gs tt">${F(P)}</td><td class="n ac tt${neg(A)}">${F(A)}</td><td class="n tt ${Math.abs(d)<.5?'':good?'pos':'neg'}">${d>0?'+':''}${F(d)}</td><td class="tt">${P?achPill(r):'—'}</td></tr>`}
+   return `<tr class="r-${t}"><td class="lbl">${n}</td>${COLS.map((_,j)=>`<td class="n pl${j?' gs':''}">${F(p[j])}</td><td class="n ac${neg(a[j])}">${F(a[j])}</td>`).join('')}<td class="n pl gs tt">${F(P)}</td><td class="n ac tt${neg(A)}">${F(A)}</td><td class="n tt ${Math.abs(d)<.5?'':good?'pos':'neg'}">${d>0?'+':''}${F(d)}</td><td class="tt">${!P?'—':isCost&&A>P?'<span class="pill over">ເກີນແຜນ</span>':achPill(r)}</td></tr>`}
  // stock
  const SK=k=>fs.reduce((t,f)=>t+STK[f][k],0);
  $('#kStock').innerHTML=kpi('ແປ້ງ On spec',fmt(SK('starch'),1),'ໂຕນ',`25 kg: ${fmt(SK('s25'),1)} · 850 kg: ${fmt(SK('s850'),1)}`)+kpi('ກາກມັນ',fmt(SK('pulp'),2),'ໂຕນ',`${fmt(+SET.pulp_price||0)} ຢວນ/ໂຕນ`)+kpi('ມັນຕົ້ນຄ້າງລານ',fmt(SK('raw'),1),'ໂຕນ',dfmt(LAST.proc),SK('raw')>150?['warn','! ຄວນເຂົ້າຜະລິດໄວ']:null)+kpi('ຄິດເປັນຕູ້ (28 ໂຕນ)',fmt(SK('starch')/28,1),'ຕູ້',`ສັນຍາຍັງເຫຼືອ ${fmt(contracts.filter(c=>fs.includes(c[0])).reduce((t,c)=>t+Math.max(0,c[4]-c[7]),0))} ໂຕນ`);
