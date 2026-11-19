@@ -10,7 +10,7 @@ const p2=n=>String(n).padStart(2,'0');
 const dfmt=d=>d?`${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()}`:'—';
 const toDate=s=>s?new Date(String(s).slice(0,10)+'T00:00:00'):null;
 const isoOf=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
-let ROLE='viewer',USERNAME='';
+let ROLE='viewer',USERNAME='',BANK=[],BANK_ERR=null;
 let SET={},SEASON='2026-27',S0=new Date(2026,8,1),NM=9,M=[],NOWI=0,NOWFRAC=0,FX=3242;
 let plan={},act={},PL={},SEASON_NET={},PU={},CMF={xan:[],nan:[]},contracts=[],SHIP=[],PROC=[],PROD=[],MOVES=[],STK={},LAST={},LOANS=[],LTX=[],OUT_NC={xan:0,nan:0},ADV={xan:0,nan:0},PEND={xan:0,nan:0};
 const AK=['proc','trucks','kip','toProd','waste','prod','p25','p850','onspec','offspec','pulp','pulpSold','exp','e25','e850','inv','invT','rev','revT','cash','ded','dir','ind','int'];
@@ -29,6 +29,7 @@ async function loadAll(){
  const [plans,procs,prods,moves,ships,cons,costs,loans,ltx]=await Promise.all([fetchAll('plans',f),fetchAll('procurements',f),fetchAll('production',f),fetchAll('stock_moves',f),
   fetchAll('shipments',f),fetchAll('contracts',f),fetchAll('cost_entries',f),fetchAll('loans'),fetchAll('loan_txns')]);
  buildModel({plans,procs,prods,moves,ships,cons,costs,loans,ltx});
+ try{BANK=await fetchAll('bank_txns');BANK_ERR=null}catch(e){BANK=[];BANK_ERR=e.message||String(e)}
 }
 function buildModel(D){
  FX=(SET.fx&&+SET.fx.rate)||3242;
@@ -98,14 +99,17 @@ const cmOf=fs=>[...new Set(fs.flatMap(f=>CMF[f]))].sort((a,b)=>a-b);
 const mLbl=ixs=>!ixs.length?'ຍັງບໍ່ມີຂໍ້ມູນ':ixs.length===1?M[ixs[0]]:`${M[ixs[0]].slice(0,2)}–${M[ixs[ixs.length-1]]}`;
 const planConv=fs=>{const p=fs.reduce((t,f)=>t+PU[f].proc,0),d=fs.reduce((t,f)=>t+PU[f].prod,0);return d?p/d:null};
 
-const st={f:'all',p:'season'};
+const st={f:'all',p:'season',from:null,to:null};
 const $=s=>document.querySelector(s);
 const fmt=(n,d=0)=>n==null||isNaN(n)?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 const kip=n=>{const a=Math.abs(n);if(a>=1e9)return fmt(n/1e9,2)+' ຕື້';if(a>=1e6)return fmt(n/1e6,1)+' ລ້ານ';return fmt(n)};
 const mcny=n=>fmt(n/1e6,2);
 const facs=()=>st.f==='all'?['xan','nan']:[st.f];
-const idxs=()=>st.p==='season'?[...Array(NOWI+1).keys()]:[+st.p];
-const pname=()=>st.p==='season'?`ລະດູ ${SEASON} ເຖິງ ${dfmt(yday()).slice(0,5)}`:M[+st.p];
+// selected date range: season (start → today), this month, or custom from/to
+const rng=()=>{const t=isoOf(new Date());if(st.p==='season')return[isoOf(S0),t];if(st.p==='month'){const d=new Date();return[isoOf(new Date(d.getFullYear(),d.getMonth(),1)),t]}
+ return[st.from||isoOf(S0),st.to||t]};
+const idxs=()=>{if(st.p==='season')return[...Array(NOWI+1).keys()];const [a,b]=rng();const lo=Math.max(0,mi(toDate(a))),hi=Math.min(NOWI,mi(toDate(b)));const o=[];for(let i=lo;i<=hi;i++)o.push(i);return o.length?o:[NOWI]};
+const pname=()=>{if(st.p==='season')return `ລະດູ ${SEASON} ເຖິງ ${dfmt(yday()).slice(0,5)}`;const [a,b]=rng();return `${isoD(a)} – ${isoD(b)}`};
 const sumA=(k,fs,ix)=>fs.reduce((t,f)=>t+ix.reduce((a,i)=>a+(act[f][k][i]||0),0),0);
 const planTD=(k,fs,ix)=>fs.reduce((t,f)=>t+ix.reduce((a,i)=>a+plan[f][k][i]*(i===NOWI?NOWFRAC:1),0),0);
 const planFull=(k,fs,ix)=>fs.reduce((t,f)=>t+(st.p==='season'?plan[f][k].reduce((a,b)=>a+b,0):ix.reduce((a,i)=>a+plan[f][k][i],0)),0);
@@ -251,10 +255,23 @@ function render(){
  $('#kSales').innerHTML=kpi('ສົ່ງອອກ (ອອກສາງ)',fmt(exp),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdE)} ໂຕນ<br>${owe(fs)}`,status(tdE?exp/tdE:null))+kpi('ສັນຍາທັງໝົດ',fmt(cT),'ໂຕນ',`${cs.length} ສັນຍາ · ${pct(cT/plan_total(fs,'prod'))} ຂອງແຜນຜະລິດທັງລະດູ`)+
   kpi('ລາຄາສົ່ງອອກສະເລ່ຍ',sumA('invT',fs,ix)?fmt(sumA('inv',fs,ix)/sumA('invT',fs,ix)):'—','ຢວນ/ໂຕນ',exp?`ຕາມມື້ສົ່ງອອກ · ຊ່ວງ ${(()=>{const pr=SHIP.filter(s=>fs.includes(s.factory)&&s.price>0).map(s=>+s.price);return pr.length?fmt(Math.min(...pr))+'–'+fmt(Math.max(...pr)):'—'})()} · ມູນຄ່າໃບແຈ້ງໜີ້ ${mcny(sumA('inv',fs,ix))} ລ້ານ`:'ຍັງບໍ່ມີການສົ່ງອອກ')+
   kpi('ສິນຄ້າຄ້າງສາງ',fmt(stockT,1),'ໂຕນ',stockT?`ແປ້ງ · 25 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s25,0),1)} · 850 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s850,0),1)} · ກາກມັນ ${fmt(fs.reduce((t,f)=>t+STK[f].pulp,0),2)} ໂຕນ`:'ບໍ່ມີສິນຄ້າໃນສາງ');
- $('#tCon').innerHTML=`<thead><tr><th>ເລກທີສັນຍາ</th><th>ຜູ້ຊື້</th><th>ໂຮງງານ</th><th class="n">ປະລິມານ (ໂຕນ)</th><th class="n">ມູນຄ່າສັນຍາ (ຢວນ)</th><th class="n">% ຫັກຈາກລາຍຮັບ</th><th>ອອກສາງ (ໂຕນ)</th><th class="n">ອອກໃບແຈ້ງໜີ້ (ໂຕນ)</th><th class="n">ລໍຖ້າໃບແຈ້ງໜີ້ (ໂຕນ)</th></tr></thead><tbody>`+
-  cs.map(c=>`<tr><td class="mono">${c[1]}</td><td>${c[2]}<div class="src">${c[3]}</div></td><td>${FN[c[0]]}</td><td class="n">${fmt(c[4])}</td><td class="n">${c[12]?fmt(c[12]):'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>'}</td><td class="n">${c[11]==null?'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>':`<b>${pct(c[11])}</b>`}</td><td style="white-space:nowrap"><span class="mini"><i style="width:${Math.min(100,c[15]/c[4]*100)}%"></i></span>${fmt(c[15])} (${pct(c[15]/c[4])})</td><td class="n">${fmt(c[7])}</td><td class="n">${c[15]-c[7]>0.5?`<span class="pill warn">${fmt(c[15]-c[7])}</span>`:'—'}</td></tr>`).join('')+
-  (fs.reduce((t,f)=>t+OUT_NC[f],0)>0.5?`<tr><td colspan="6" class="issue">ອອກສາງ ທີ່ຈັບຄູ່ກັບສັນຍາບໍ່ໄດ້ (ຊື່ບໍລິສັດໃນ Sheet 5.x ບໍ່ກົງກັບຜູ້ຊື້)</td><td>${fmt(fs.reduce((t,f)=>t+OUT_NC[f],0))}</td><td></td><td></td></tr>`:'')+
-  `<tr class="total"><td colspan="3">ລວມ</td><td class="n">${fmt(cT)}</td><td class="n">${cs.every(c=>c[12])?fmt(S(12)):'—'}</td><td></td><td>${fmt(S(15)+fs.reduce((t,f)=>t+OUT_NC[f],0))}</td><td class="n">${fmt(cInvT)}</td><td class="n">${fmt(Math.max(0,S(15)+fs.reduce((t,f)=>t+OUT_NC[f],0)-cInvT))}</td></tr></tbody>`;
+ // latest price = newest invoice lot (by lot number) of the contract; overall = newest lot of the most recently shipped contract
+ const lotLast=L=>L.filter(x=>+x.price>0).sort((p,q)=>String(p.invoice_no||'').localeCompare(String(q.invoice_no||''),undefined,{numeric:true})).slice(-1)[0];
+ const recent=SHIP.filter(x=>+x.price>0).slice(-1)[0];const lastPxAll=recent?(lotLast(SHIP.filter(x=>x.factory===recent.factory&&String(x.contract_no||'').split('-').slice(0,4).join('-')===String(recent.contract_no||'').split('-').slice(0,4).join('-')))||recent).price:null;
+ const cPx=c=>{const l=lotLast(SHIP.filter(x=>(x.contract_no||'').startsWith(c[1])));return l?[+l.price,'ລາຄາລ່າສຸດ ຂອງສັນຍານີ້']:lastPxAll?[+lastPxAll,'ຍັງບໍ່ມີໃບແຈ້ງໜີ້ · ລາຄາລ່າສຸດ']:[null,'']};
+ {const s25=fs.reduce((t,f)=>t+STK[f].s25,0),s850=fs.reduce((t,f)=>t+STK[f].s850,0),pu=fs.reduce((t,f)=>t+STK[f].pulp,0),stT=s25+s850,owed=fs.reduce((t,f)=>t+ADV[f],0),free=Math.max(0,stT-owed),px=+lastPxAll||0,pp=+SET.pulp_price||0;
+  const mx=a=>a.length?isoD(isoOf(new Date(Math.max(...a.map(r=>+r.d))))):'—';
+  $('#kStk').innerHTML=kpi('ແປ້ງໃນສາງ',fmt(stT,1),'ໂຕນ',`25 kg: ${fmt(s25,1)} · 850 kg: ${fmt(s850,1)}`)+kpi('ມູນຄ່າປະມານ',fmt(stT*px+pu*pp),'ຢວນ',`ແປ້ງ ${fmt(px)} ຢວນ/ໂຕນ (ລາຄາສົ່ງອອກລ່າສຸດ) · ກາກມັນ ${fmt(pp)}`)+
+   kpi('ຕິດໜີ້ແປ້ງລູກຄ້າ',fmt(owed,1),'ໂຕນ','ໄດ້ເງິນແລ້ວ ຍັງບໍ່ສົ່ງ')+kpi('ແປ້ງທີ່ຍັງບໍ່ຜູກມັດ',fmt(free,1),'ໂຕນ',owed>stT?`ຕ້ອງຜະລິດເພີ່ມ ${fmt(owed-stT,1)} ໂຕນ ເພື່ອສົ່ງໃຫ້ຄົບ`:'ຂາຍໃຫ້ລູກຄ້າອື່ນໄດ້',owed>stT?['warn','ແປ້ງໃນສາງ ບໍ່ພໍສົ່ງ']:null);
+  let tv=0;const rows=[];fs.forEach(f=>{const S=STK[f],pd=mx(PROD.filter(r=>r.factory===f&&+r.output_kg>0)),od=mx(MOVES.filter(r=>r.factory===f&&r.kind==='starch'&&r.direction==='out'));
+   rows.push([FN[f],'ແປ້ງ · ຖົງ 25 kg',S.s25,fmt(S.s25*40)+' ຖົງ',fmt(Math.round(S.s25))+' ພາເລັດ',px,pd,od],[FN[f],'ແປ້ງ · Jumbo 850 kg',S.s850,fmt(S.s850/0.85)+' ຖົງ','—',px,pd,od],[FN[f],'ກາກມັນ',S.pulp,'—','—',pp,pd,mx(MOVES.filter(r=>r.factory===f&&r.kind==='pulp'))])});
+  $('#tStk').innerHTML=`<thead><tr><th>ໂຮງງານ</th><th>ສິນຄ້າ</th><th class="n">ໂຕນ</th><th class="n">ຈຳນວນຖົງ</th><th class="n">ພາເລັດ</th><th class="n">ລາຄາ (ຢວນ/ໂຕນ)</th><th class="n">ມູນຄ່າ (ຢວນ)</th><th>ຜະລິດລ່າສຸດ</th><th>ອອກສາງລ່າສຸດ</th></tr></thead><tbody>`+
+   rows.map(r=>{const v=r[2]>0?r[2]*r[5]:0;tv+=v;return `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="n"><b>${fmt(r[2],2)}</b></td><td class="n">${r[2]>0?r[3]:'—'}</td><td class="n">${r[2]>0?r[4]:'—'}</td><td class="n">${r[5]?fmt(r[5]):'—'}</td><td class="n">${v?fmt(v):'—'}</td><td>${r[6]}</td><td>${r[7]}</td></tr>`}).join('')+
+   `<tr class="total"><td colspan="2">ລວມ</td><td class="n">${fmt(stT+pu,2)}</td><td colspan="3"></td><td class="n">${fmt(tv)}</td><td colspan="2"></td></tr></tbody>`}
+ $('#tCon').innerHTML=`<thead><tr><th>ເລກທີສັນຍາ</th><th>ຜູ້ຊື້</th><th>ໂຮງງານ</th><th class="n">ປະລິມານ (ໂຕນ)</th><th class="n">ລາຄາທີ່ໃຊ້ (ຢວນ/ໂຕນ)</th><th class="n">ມູນຄ່າສັນຍາ (ຢວນ)</th><th class="n">ມູນຄ່າມັດຈຳ (ຢວນ)</th><th class="n">% ຫັກຈາກລາຍຮັບ</th><th>ອອກສາງ (ໂຕນ)</th><th class="n">ອອກໃບແຈ້ງໜີ້ (ໂຕນ)</th><th class="n">ລໍຖ້າໃບແຈ້ງໜີ້ (ໂຕນ)</th></tr></thead><tbody>`+
+  cs.map(c=>`<tr><td class="mono">${c[1]}</td><td>${c[2]}<div class="src">${c[3]}</div></td><td>${FN[c[0]]}</td><td class="n">${fmt(c[4])}</td><td class="n">${cPx(c)[0]?fmt(cPx(c)[0]):'—'}<div class="src">${cPx(c)[1]}</div></td><td class="n"><b>${cPx(c)[0]?fmt(cPx(c)[0]*c[4]):'—'}</b></td><td class="n">${fmt(c[6])}</td><td class="n">${c[11]==null?'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>':`<b>${pct(c[11])}</b>`}</td><td style="white-space:nowrap"><span class="mini"><i style="width:${Math.min(100,c[15]/c[4]*100)}%"></i></span>${fmt(c[15])} (${pct(c[15]/c[4])})</td><td class="n">${fmt(c[7])}</td><td class="n">${c[15]-c[7]>0.5?`<span class="pill warn">${fmt(c[15]-c[7])}</span>`:'—'}</td></tr>`).join('')+
+  (fs.reduce((t,f)=>t+OUT_NC[f],0)>0.5?`<tr><td colspan="8" class="issue">ອອກສາງ ທີ່ຈັບຄູ່ກັບສັນຍາບໍ່ໄດ້ (ຊື່ບໍລິສັດໃນ Sheet 5.x ບໍ່ກົງກັບຜູ້ຊື້)</td><td>${fmt(fs.reduce((t,f)=>t+OUT_NC[f],0))}</td><td></td><td></td></tr>`:'')+
+  `<tr class="total"><td colspan="3">ລວມ</td><td class="n">${fmt(cT)}</td><td></td><td class="n">${fmt(cs.reduce((t,c)=>t+(cPx(c)[0]||0)*c[4],0))}</td><td class="n">${fmt(S(6))}</td><td></td><td>${fmt(S(15)+fs.reduce((t,f)=>t+OUT_NC[f],0))}</td><td class="n">${fmt(cInvT)}</td><td class="n">${fmt(Math.max(0,S(15)+fs.reduce((t,f)=>t+OUT_NC[f],0)-cInvT))}</td></tr></tbody>`;
  $('#tDep').innerHTML=`<thead><tr><th>ເລກທີສັນຍາ</th><th>ຜູ້ຊື້</th><th>ໂຮງງານ</th><th class="n">ມັດຈຳລວມ</th><th class="n">ໄດ້ຮັບແລ້ວ</th><th class="n">ຍັງຄ້າງຮັບ</th><th class="n">ຫັກຈາກເງິນມັດຈຳແລ້ວ</th><th class="n">ມັດຈຳຄົງເຫຼືອ</th><th>ໝາຍເຫດ</th></tr></thead><tbody>`+
   cs.map(c=>{const owe=c[6]-c[10];return `<tr><td class="mono">${c[1]}</td><td>${c[2].split(' ')[0]}</td><td>${FN[c[0]]}</td><td class="n">${fmt(c[6])}</td><td class="n pos">${fmt(c[10])}</td><td class="n">${owe>0?`<span class="pill warn">${fmt(owe)}</span>`:'<span class="pill good">✓ 0</span>'}</td><td class="n">${fmt(c[9])}</td><td class="n"><b>${fmt(c[10]-c[9])}</b></td><td class="src">${esc(c[13])}</td></tr>`}).join('')+
   `<tr class="total"><td colspan="3">ລວມ</td><td class="n">${fmt(cDep)}</td><td class="n">${fmt(cRecv)}</td><td class="n">${fmt(cOwe)}</td><td class="n">${fmt(cOff)}</td><td class="n">${fmt(cBal)}</td><td></td></tr></tbody>`;
@@ -288,7 +305,7 @@ function render(){
   ['NET','VII. ກຳໄລ/ຂາດທຶນ ສຸດທິ','n',[['REV'],['DIR','IND','int']]]];
  const grpKeys={REV:['rexp','rpulp'],DIR:['raw','oth','mkt'],IND:['salL','salF','admin','maint','support','asset','othI'],int:['int']};
  const V=(key,w,i,F=fs)=>{if(key==='prod'||key==='exp')return F.reduce((t,f)=>t+(w==='p'?plan:act)[f][key][i],0);if(PL.xan[key])return L(key,w,i,F);if(grpKeys[key])return grpKeys[key].reduce((t,k)=>t+L(k,w,i,F),0);const r=ROWS.find(x=>x[0]===key);return r[3][0].reduce((t,k)=>t+V(k,w,i,F),0)-r[3][1].reduce((t,k)=>t+V(k,w,i,F),0)};
- const TOT=st.p==='season'?CMs:CMs.filter(i=>i===+st.p),COLS=st.p==='season'?CMs.slice(-2):TOT;const TL=mLbl(TOT);
+ const IXS=idxs(),TOT=st.p==='season'?CMs:CMs.filter(i=>IXS.includes(i)),COLS=st.p==='season'?CMs.slice(-2):TOT;const TL=mLbl(TOT);
  const V2=(key,w,F)=>TOT.reduce((t,i)=>t+V(key,w,i,F),0);
  const COST=(w,F)=>['DIR','IND','int'].reduce((t,k)=>t+V2(k,w,F),0);
  const netA=M.map((_,i)=>CMs.includes(i)?V('NET','a',i):null);
@@ -344,11 +361,13 @@ function pvaBlock(key,pre,fs){
 function plan_total(fs,k){return fs.reduce((t,f)=>t+plan[f][k].reduce((a,b)=>a+b,0),0)}
 
 /* controls */
-$('#factorySeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st.f=b.dataset.f;document.querySelectorAll('#factorySeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));save();render()});
-$('#period').addEventListener('change',e=>{st.p=e.target.value;save();render()});
+$('#factorySeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st.f=b.dataset.f;document.querySelectorAll('#factorySeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));save();render();renderDebt();renderCash()});
+function syncPrd(){document.querySelectorAll('#prd button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===st.p));const [a,b]=rng();$('#pFrom').value=a;$('#pTo').value=b}
+$('#prd').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st.p=b.dataset.p;st.from=st.to=null;syncPrd();save();render();renderDebt();renderCash()});
+['#pFrom','#pTo'].forEach(id=>$(id).addEventListener('change',()=>{let a=$('#pFrom').value,b=$('#pTo').value;if(!a||!b)return;if(a>b)[a,b]=[b,a];st.p='custom';st.from=a;st.to=b;syncPrd();save();render();renderDebt();renderCash()}));
 function save(){try{localStorage.setItem('ls-view2',JSON.stringify(st))}catch(e){}}
-try{const s=JSON.parse(localStorage.getItem('ls-view2')||'null');if(s&&['all','xan','nan'].includes(s.f)){Object.assign(st,s);$('#period').value=st.p;document.querySelectorAll('#factorySeg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.f===st.f))}}catch(e){}
-const views=['overview','procure','produce','sales','cost','stock','debt','import'];
+try{const s=JSON.parse(localStorage.getItem('ls-view2')||'null');if(s&&['all','xan','nan'].includes(s.f)){Object.assign(st,s);if(!['season','month','custom'].includes(st.p))st.p='season';document.querySelectorAll('#factorySeg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.f===st.f))}}catch(e){}
+const views=['overview','procure','produce','sales','cost','stock','debt','cash','import'];
 function route(){const h=location.hash.slice(1);const v=views.includes(h)?h:'overview';views.forEach(x=>$('#v-'+x).hidden=x!==v);document.querySelectorAll('.tabs a').forEach(a=>a.getAttribute('href')==='#'+v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'))}
 addEventListener('hashchange',route);
 
@@ -394,6 +413,15 @@ P.costs=(rows,fac)=>{const h=rows.findIndex(r=>r&&r.some(c=>nz(c)==='ເນື�
  const out=[];rows.slice(h+1).forEach(r=>{const code=r&&r[0]!=null?String(r[0]).trim():'';if(!/^[A-Za-z]+(-[A-Za-z]+)?$/.test(code))return;const cat=CAT(code);if(!cat)return;
   mc.forEach(([j,mo])=>{const y=mo>=S0.getMonth()+1?S0.getFullYear():S0.getFullYear()+1;const v=num(r[j]);if(!v)return;
    out.push({season:SEASON,factory:fac,month:`${y}-${p2(mo)}-01`,code:code.replace(/-(SNK|MN)$/i,''),category:cat,amount:v})})});return out};
+// Banking_Daily: every row of every bank account (opening rows have no date), one record per currency column used
+P.bank=rows=>{const h=rows.findIndex(r=>r&&r.some(c=>nz(c)==='codingbank'));if(h<0)return null;const H=rows[h];const col=k=>H.findIndex(c=>nz(c)===k);
+ const c={d:col('ວດປ'),co:col('company'),acc:col('codingbank'),act:col('activitycode'),code:col('expensecode'),desc:ci(H,'ລາຍລະອຽດ'),op:ci(H,'ຍອດຍົກມາ')};const CUR=['LAK','THB','USD','CNY'];
+ const io=Object.fromEntries(CUR.map(k=>[k,[col(k.toLowerCase()+'in'),col(k.toLowerCase()+'out')]]));const out=[];
+ rows.slice(h+1).forEach(r=>{const acc=r&&r[c.acc]!=null?String(r[c.acc]).trim():'';if(!/^[A-Z]+-[A-Z]+-[A-Z]{3}$/i.test(acc))return;const ac=acc.slice(-3).toUpperCase();
+  const d=parseDate(r[c.d]);const base={date:d&&d.getFullYear()>2000?isoOf(d):null,company:r[c.co]!=null?String(r[c.co]).trim():null,account:acc,activity:r[c.act]!=null?String(r[c.act]).trim():null,code:r[c.code]!=null?String(r[c.code]).trim():null,descr:r[c.desc]!=null?String(r[c.desc]).trim().slice(0,300):null};
+  const op=c.op>=0?num(r[c.op]):0;let opDone=!op;
+  CUR.forEach(k=>{const i=io[k][0]>=0?num(r[io[k][0]]):0,o=io[k][1]>=0?num(r[io[k][1]]):0;const isOp=k===ac&&!opDone;if(!i&&!o&&!isOp)return;out.push({...base,currency:k,amt_in:i,amt_out:o,opening:isOp?op:0});if(isOp)opDone=true});
+  if(!opDone)out.push({...base,currency:ac,amt_in:0,amt_out:0,opening:op})});return out};
 P.plans=rows=>{const out=[];const blocks=[];rows.forEach((r,i)=>{const a=String(r&&r[0]||'');if(/P&L PROJECTION/i.test(a)){const fac=/ຊະນະຄາມ/.test(a)?'xan':/ນານ/.test(a)?'nan':null;if(fac)blocks.push([fac,i])}});
  if(!blocks.length)return null;
  blocks.forEach(([fac,b],bi)=>{const end=bi+1<blocks.length?blocks[bi+1][1]:rows.length;const B=rows.slice(b,end);const g=pre=>{const r=B.find(x=>x&&String(x[0]||'').trim().startsWith(pre));return r?r.slice(1,11).map(num):Array(10).fill(0)};
@@ -409,14 +437,16 @@ const SHEETS=[
  {key:'shipments',lo:'ໃບແຈ້ງໜີ້ ສົ່ງອອກ',test:n=>/ຕິດຕາມການສົ່ງອອກ/.test(n)},
  {key:'deposits',lo:'ເງິນມັດຈຳສັນຍາ',test:n=>/^2\.3|contract\s*\d\d/i.test(n)},
  {key:'costs',lo:'ຕົ້ນທຶນລາຍເດືອນ',test:n=>/^cost of (snk|mn)/i.test(n.trim())},
- {key:'plans',lo:'ແຜນລະດູ (P&L Projection)',test:n=>/pl projection \(v2\)/i.test(n)}];
+ {key:'plans',lo:'ແຜນລະດູ (P&L Projection)',test:n=>/pl projection \(v2\)/i.test(n)},
+ {key:'bank',lo:'ບັນຊີເງິນຝາກ (ກະແສເງິນສົດ)',test:n=>/^banking[_\s]*daily/i.test(n.trim())}];
 let PARSED=null;
 function parseWorkbook(wb,file){
- const res=[],data={procurements:{},production:{},stock_moves:{},shipments:{},costs:{},deposits:null,plans:null};
+ const res=[],data={procurements:{},production:{},stock_moves:{},shipments:{},costs:{},deposits:null,plans:null,bank:null};
  wb.SheetNames.forEach(n=>{const sp=SHEETS.find(s=>s.test(n));if(!sp){res.push({name:n,kind:'skip'});return}
   const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,raw:true});const fac=facOfName(n);
   try{const v=P[sp.key](rows,fac);if(v==null){res.push({name:n,kind:'unknown',lo:sp.lo});return}
    if(sp.key==='deposits'){data.deposits=v;res.push({name:n,kind:'ok',lo:sp.lo,table:'contracts',rows:Object.keys(v).length,fac:'ທັງ 2 ໂຮງງານ',note:Object.entries(v).map(([k,x])=>`${k}: ${fmt(x)}`).join(' · ')});return}
+   if(sp.key==='bank'){data.bank=v;const ds=v.map(r=>r.date).filter(Boolean).sort();res.push({name:n,kind:'ok',lo:sp.lo,table:'bank_txns',rows:v.length,fac:'ທັງ 2 ໂຮງງານ',from:ds[0],to:ds[ds.length-1]});return}
    if(sp.key==='plans'){data.plans=v;res.push({name:n,kind:'ok',lo:sp.lo,table:'plans',rows:v.length,fac:'ທັງ 2 ໂຮງງານ'});return}
    if(!fac){res.push({name:n,kind:'unknown',lo:sp.lo,note:'ບໍ່ຮູ້ໂຮງງານ ຈາກຊື່ Sheet'});return}
    data[sp.key][fac]=(data[sp.key][fac]||[]).concat(v);
@@ -445,6 +475,7 @@ async function commitImport(){
     let {error}=await sb.from(t).delete().eq('season',SEASON).eq('factory',fac);if(error)throw error;await insertChunks(t,rows);total+=rows.length}}
   for(const [fac,rows] of Object.entries(data.costs)){msg.textContent=`ກຳລັງບັນທຶກ ຕົ້ນທຶນ (${FN[fac]}) …`;let {error}=await sb.from('cost_entries').delete().eq('season',SEASON).eq('factory',fac);if(error)throw error;await insertChunks('cost_entries',rows);total+=rows.length}
   if(data.plans){msg.textContent='ກຳລັງບັນທຶກ ແຜນ …';let {error}=await sb.from('plans').delete().eq('season',SEASON);if(error)throw error;await insertChunks('plans',data.plans);total+=data.plans.length}
+  if(data.bank){msg.textContent='ກຳລັງບັນທຶກ ບັນຊີເງິນຝາກ …';let {error}=await sb.from('bank_txns').delete().gte('id',0);if(error)throw error;await insertChunks('bank_txns',data.bank);total+=data.bank.length}
   if(data.deposits){const cons=await fetchAll('contracts',q=>q.eq('season',SEASON));for(const c of cons){const key=Object.keys(data.deposits).find(k=>c.contract_no.endsWith(k)||c.contract_no.includes(k));
     if(key){const {error}=await sb.from('contracts').update({deposit_received:data.deposits[key]}).eq('contract_no',c.contract_no);if(error)throw error;total++}}}
   await sb.from('import_log').insert({file_name:file,rows:total,sheets:PARSED.res.filter(r=>r.kind==='ok').map(r=>({sheet:r.name,table:r.table,rows:r.rows}))});
@@ -609,11 +640,146 @@ function renderDebt(){
  const wcNo=(L.find(l=>l.purpose==='wc'&&l.cur==='CNY')||L[0]).no;
  const keep=$('#txLoan').value||wcNo;$('#txLoan').innerHTML=opts;$('#txLoan').value=keep;$('#txCur').textContent='('+(L.find(l=>l.no===$('#txLoan').value)||L[0]).cur+')';
  const kb=$('#balLoan').value||wcNo;$('#balLoan').innerHTML=opts;$('#balLoan').value=kb;
- const tx=LTX.slice().sort((a,b)=>b.date.localeCompare(a.date)||(b.id-a.id));
- $('#tTx').innerHTML=`<thead><tr><th>ວັນທີ</th><th>ເງິນກູ້</th><th>ລາຍການ</th><th class="n">ຈຳນວນ</th><th>ສະກຸນ</th><th class="n">ທຽບເທົ່າກີບ</th><th>ໝາຍເຫດ</th></tr></thead><tbody>`+
-  (tx.length?tx.map(t=>{const cur=lc(t.loan_no);return `<tr><td>${isoD(t.date)}</td><td class="mono">${t.loan_no}</td><td><span class="tag ${t.type}">${TXL[t.type]}</span></td><td class="n">${t.type==='adj'?'—':(t.type==='draw'?'+':'−')+fmt(t.amount)}</td><td>${cur}</td><td class="n">${t.type==='adj'?'—':fmt(toK(+t.amount,cur))}</td><td>${esc(t.note||'')}</td></tr>`}).join(''):'<tr><td colspan="7" class="src">ຍັງບໍ່ມີລາຍການ</td></tr>')+'</tbody>';
+ const [R0,R1]=rng();const tx=LTX.filter(t=>t.date>=R0&&t.date<=R1).sort((a,b)=>b.date.localeCompare(a.date)||(b.id-a.id));
+ $('#tTx').innerHTML=`<thead><tr><th>ວັນທີ</th><th>ເງິນກູ້</th><th>ລາຍການ</th><th>ປະເພດການນຳໃຊ້</th><th class="n">ຈຳນວນ</th><th>ສະກຸນ</th><th class="n">ທຽບເທົ່າກີບ</th><th>ໝາຍເຫດ</th><th class="admin-only"></th></tr></thead><tbody>`+
+  (tx.length?tx.map(t=>{const cur=lc(t.loan_no);return `<tr><td>${isoD(t.date)}</td><td class="mono">${t.loan_no}</td><td><span class="tag ${t.type}">${TXL[t.type]}</span></td><td>${t.type==='draw'?catTag(t.category):'—'}</td><td class="n">${t.type==='adj'?'—':(t.type==='draw'?'+':'−')+fmt(t.amount)}</td><td>${cur}</td><td class="n">${t.type==='adj'?'—':fmt(toK(+t.amount,cur))}</td><td>${esc(t.note||'')}</td><td class="n admin-only">${t.type==='adj'?'':`<button type="button" class="edb" data-tx="${t.id}">ແກ້ໄຂ</button>`}</td></tr>`}).join(''):'<tr><td colspan="9" class="src">ຍັງບໍ່ມີລາຍການ</td></tr>')+'</tbody>';
+ document.querySelectorAll('#tTx [data-tx]').forEach(b=>b.onclick=()=>openTxEdit(+b.dataset.tx));
+ renderCats();renderLoanUse();
  renderBal();
 }
+/* loan purpose categories (settings.loan_cats, editable by admin) */
+const CATS_DEF=[{id:'wc',n:'ທຶນໝູນວຽນ ຊື້ມັນຕົ້ນ',c:'#17733d',track:true},{id:'intpre',n:'ຊຳລະດອກເບ້ຍລ່ວງໜ້າ',c:'#e0a33a'},{id:'admin',n:'ຄ່າໃຊ້ຈ່າຍບໍລິຫານ',c:'#2f5fb0'},{id:'capex',n:'ຊື້ຊັບສິນ / ລົງທຶນ',c:'#7a4fb5'},{id:'oth',n:'ອື່ນໆ',c:'#8a948e'}];
+const CATC=['#3a8f8a','#b5527a','#5a7d2a','#a0522d','#4a6fa5'];
+const cats=()=>Array.isArray(SET.loan_cats)&&SET.loan_cats.length?SET.loan_cats:CATS_DEF;
+const catOf=id=>cats().find(c=>c.id===id);
+const catTag=id=>{const c=catOf(id);return c?`<span class="ctag" style="background:${c.c}22;color:${c.c}"><i style="background:${c.c}"></i>${esc(c.n)}</span>`:'<span class="pill mute">ຍັງບໍ່ກຳນົດ</span>'};
+const catOpts=(v,blank)=>(blank?`<option value="">— ${blank}</option>`:'')+cats().map(c=>`<option value="${c.id}"${c.id===v?' selected':''}>${esc(c.n)}</option>`).join('');
+async function saveCats(list,msgEl){const {error}=await sb.from('settings').upsert({key:'loan_cats',value:list});if(error){if(msgEl)msgEl.textContent='ບັນທຶກບໍ່ສຳເລັດ: '+error.message;return false}SET.loan_cats=list;renderDebt();return true}
+function renderCats(){
+ const keep=$('#txCat').value||'wc';$('#txCat').innerHTML=catOpts(keep);$('#txCat').disabled=$('#txType').value!=='draw';
+ const [a,b]=rng();const L=LOANS.map(LN);const lc=no=>(L.find(l=>l.no===no)||{cur:'LAK'}).cur;
+ const dr=LTX.filter(t=>t.type==='draw'&&t.date>=a&&t.date<=b);const kv=t=>toK(+t.amount,lc(t.loan_no));const tot=dr.reduce((s,t)=>s+kv(t),0);
+ $('#catNote').textContent=`ເບີກເງິນກູ້ ${isoD(a)} – ${isoD(b)} · ທຽບເທົ່າກີບ`;
+ const card=(c,L2,lbl,col)=>{const k=L2.reduce((s,t)=>s+kv(t),0),y=L2.filter(t=>lc(t.loan_no)==='CNY').reduce((s,t)=>s+(+t.amount),0);
+  return `<div class="lcat"><small><i style="background:${col}"></i>${esc(lbl)}</small><b>${bigK(k)} <em>ກີບ</em></b><em>${L2.length} ຄັ້ງ${y?` · ${fmt(y)} ຢວນ`:''} · ${tot?pct(k/tot):'0%'}</em></div>`};
+ const un=dr.filter(t=>!catOf(t.category));
+ $('#loanCats').innerHTML=cats().map(c=>card(c,dr.filter(t=>t.category===c.id),c.n,c.c)).join('')+(un.length?card(null,un,'ຍັງບໍ່ກຳນົດປະເພດ','#c9cfca'):'')+
+  `<div class="lcat tot"><small>ລວມທຸກປະເພດ</small><b>${bigK(tot)} <em>ກີບ</em></b><em>${dr.length} ຄັ້ງ</em></div>`;
+ $('#tCats').innerHTML=`<thead><tr><th>ປະເພດ</th><th>ກວດກັບຍອດເກັບຊື້</th><th class="n">ໃຊ້ຢູ່</th><th></th></tr></thead><tbody>`+cats().map(c=>`<tr><td data-cn="${c.id}">${catTag(c.id)}</td><td><label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" data-ct="${c.id}"${c.track?' checked':''}> ແມ່ນ</label></td><td class="n">${LTX.filter(t=>t.category===c.id).length} ລາຍການ</td><td class="n"><button type="button" class="edb" data-ce="${c.id}">ແກ້ຊື່</button></td></tr>`).join('')+'</tbody>';
+ document.querySelectorAll('#tCats [data-ct]').forEach(x=>x.onchange=()=>saveCats(cats().map(c=>c.id===x.dataset.ct?{...c,track:x.checked}:c),$('#catMsg')));
+ document.querySelectorAll('#tCats [data-ce]').forEach(btn=>btn.onclick=()=>{const c=catOf(btn.dataset.ce);const td=document.querySelector(`#tCats [data-cn="${c.id}"]`);
+  if(btn.dataset.ed){const v=td.querySelector('input').value.trim();if(v)saveCats(cats().map(x=>x.id===c.id?{...x,n:v}:x),$('#catMsg'));return}
+  td.innerHTML=`<input type="text" maxlength="40" value="${esc(c.n)}" aria-label="ຊື່ປະເພດ" style="border:1px solid var(--line);border-radius:8px;padding:5px 8px;width:100%">`;td.querySelector('input').focus();btn.dataset.ed=1;btn.textContent='ບັນທຶກ'});
+}
+$('#txType').addEventListener('change',e=>{$('#txCat').disabled=e.target.value!=='draw'});
+$('#catForm').addEventListener('submit',async e=>{e.preventDefault();const n=$('#catNew').value.trim();if(!n)return;const used=cats().map(c=>c.c);const col=CATC.find(c=>!used.includes(c))||'#3a8f8a';
+ if(await saveCats([...cats(),{id:'c'+Date.now().toString(36),n,c:col}],$('#catMsg'))){$('#catNew').value='';$('#catMsg').textContent='ເພີ່ມແລ້ວ: '+n}});
+/* loan use check: working-capital draws vs cassava purchases from the first draw onward */
+function renderLoanUse(){
+ const [a,b]=rng();const L=LOANS.map(LN);const lc=no=>(L.find(l=>l.no===no)||{cur:'LAK'}).cur;const fs=facs();
+ const tr=new Set(cats().filter(c=>c.track).map(c=>c.id));
+ const wc=LTX.filter(t=>t.type==='draw'&&tr.has(t.category)&&t.date>=a&&t.date<=b).sort((x,y)=>x.date.localeCompare(y.date));
+ const day={};PROC.filter(r=>fs.includes(r.factory)).forEach(r=>{day[r.date]=(day[r.date]||0)+(+r.amount||0)});
+ const sumP=(d0,d1)=>Object.entries(day).filter(([d])=>d>=d0&&d<=d1).reduce((s,[,v])=>s+v,0);
+ const tonP=(d0,d1)=>PROC.filter(r=>fs.includes(r.factory)&&r.date>=d0&&r.date<=d1).reduce((s,r)=>s+(+r.net_kg||0),0)/1000;
+ const m=v=>fmt(v/1e6);
+ $('#useNote').textContent=`ນັບແຕ່ມື້ເບີກເງິນຄັ້ງທຳອິດ ໃນໄລຍະທີ່ເລືອກ · ຍອດເກັບຊື້: ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]} · ລ້ານກີບ`;
+ if(!wc.length){$('#useK').innerHTML=`<div class="kpi"><div class="d">ບໍ່ມີການເບີກເງິນກູ້ ປະເພດທີ່ກວດກັບຍອດເກັບຊື້ ໃນ ${isoD(a)} – ${isoD(b)}</div></div>`;$('#useT').innerHTML='';$('#useCh').innerHTML='';return}
+ const start=wc[0].date,wK=wc.reduce((s,t)=>s+toK(+t.amount,lc(t.loan_no)),0),pK=sumP(start,b),df=wK-pK;
+ $('#useK').innerHTML=kpi('ເບີກທຶນໝູນວຽນ ຊື້ມັນ',m(wK),'ລ້ານກີບ',`${wc.length} ຄັ້ງ · ແຕ່ ${isoD(start)}`)+kpi(`ຍອດເກັບຊື້ມັນຕົ້ນ ${isoD(start).slice(0,5)} – ${isoD(b).slice(0,5)}`,m(pK),'ລ້ານກີບ',`${fmt(tonP(start,b),1)} ໂຕນ`)+
+  kpi('ສ່ວນຕ່າງ (ເບີກ − ເກັບຊື້)',(df>0?'+':'')+m(df),'ລ້ານກີບ',df>0?'ກວດວ່າເງິນສ່ວນເກີນ ຍັງຢູ່ໃນບັນຊີ ຫຼື ໃຊ້ຜິດເປົ້າໝາຍ':'ເງິນກູ້ທີ່ເບີກ ໃຊ້ເກັບຊື້ມັນໝົດ',df>0?['warn',`ເບີກເກີນຍອດເກັບຊື້ ${pct(df/wK)}`]:['good','ຍອດເກັບຊື້ ຄອບຄຸມເງິນກູ້']);
+ const nxt=i=>wc[i+1]?wc[i+1].date:null;const pv=d=>{const x=toDate(d);x.setDate(x.getDate()-1);return isoOf(x)};
+ $('#useT').innerHTML=`<thead><tr><th>ເບີກວັນທີ</th><th class="n">ເບີກ</th><th>ຊ່ວງເກັບຊື້</th><th class="n">ເກັບຊື້</th><th class="n">ສ່ວນຕ່າງ</th></tr></thead><tbody>`+
+  wc.map((t,i)=>{const e=nxt(i)?pv(nxt(i)):b;const w=toK(+t.amount,lc(t.loan_no)),k=sumP(t.date,e),x=w-k;return `<tr><td>${isoD(t.date)}</td><td class="n">${m(w)}</td><td class="src">${isoD(t.date).slice(0,5)} – ${isoD(e).slice(0,5)}</td><td class="n">${m(k)}</td><td class="n ${x>0?'neg':'pos'}">${x>0?'+':''}${m(x)}</td></tr>`}).join('')+
+  `<tr class="total"><td>ລວມ</td><td class="n">${m(wK)}</td><td></td><td class="n">${m(pK)}</td><td class="n ${df>0?'neg':'pos'}">${df>0?'+':''}${m(df)}</td></tr></tbody>`;
+ // cumulative chart
+ const days=[];for(let d=toDate(start);isoOf(d)<=b;d.setDate(d.getDate()+1))days.push(isoOf(d));
+ let A=0,B=0;const sa=[],sb_=[];days.forEach(d=>{wc.filter(t=>t.date===d).forEach(t=>A+=toK(+t.amount,lc(t.loan_no)));B+=day[d]||0;sa.push(A/1e6);sb_.push(B/1e6)});
+ const W=560,H=240,Pl=54,Pr=12,Pt=14,Pb=28,iw=W-Pl-Pr,ih=H-Pt-Pb,mx=Math.max(...sa,...sb_,1)*1.08,stp=niceStep(mx/5),top=Math.ceil(mx/stp)*stp;
+ const x=i=>Pl+iw*i/Math.max(1,days.length-1),y=v=>Pt+ih-v/top*ih;let g=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="ເງິນກູ້ ທຽບກັບຍອດເກັບຊື້">`;
+ for(let v=0;v<=top+1e-9;v+=stp)g+=`<line class="grid" x1="${Pl}" x2="${W-Pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${Pl-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;
+ const lb=Math.max(1,Math.ceil(days.length/7));days.forEach((d,i)=>{if(i%lb===0||i===days.length-1)g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${isoD(d).slice(0,5)}</text>`});
+ const pp=sb_.map((v,i)=>`${i?'L':'M'}${x(i)},${y(v)}`).join(''),pa=sa.map((v,i)=>i?`H${x(i)}V${y(v)}`:`M${x(0)},${y(v)}`).join('');
+ g+=`<path d="${pp}V${y(0)}H${x(0)}Z" fill="var(--forest-2)" opacity=".1"/><path d="${pp}" fill="none" stroke="var(--forest-2)" stroke-width="2.4"/><path d="${pa}" fill="none" stroke="#2f5fb0" stroke-width="2.4"/>`;
+ wc.forEach(t=>{const i=days.indexOf(t.date);if(i>=0)g+=`<circle cx="${x(i)}" cy="${y(sa[i])}" r="4" fill="#2f5fb0"/>`});
+ const n=days.length-1;g+=`<text x="${x(n)-4}" y="${y(sa[n])-6}" text-anchor="end" style="fill:#2f5fb0;font-weight:700">${fmt(sa[n])}</text><text x="${x(n)-4}" y="${y(sb_[n])+15}" text-anchor="end" style="fill:var(--forest-2);font-weight:700">${fmt(sb_[n])}</text></svg>`;
+ $('#useCh').innerHTML=g}
+/* edit / delete a loan transaction (fix typing mistakes); loan balances are corrected by reversing the old entry and applying the new one */
+let EDTX=null;
+function txEffect(row,type,amt,sign){const l=LN(row),u={};if(type==='draw'){u.balance=l.bal+sign*amt;u.available=l.avail-sign*amt}else if(type==='repay'){u.balance=l.bal-sign*amt;if(l.purpose==='wc')u.available=l.avail+sign*amt}else if(type==='int'){u.interest_due=Math.max(0,l.intDue-sign*amt)}Object.assign(row,u);return u}
+function openTxEdit(id){const t=LTX.find(x=>x.id===id);if(!t)return;EDTX=t;const L=LOANS.map(LN);
+ $('#txEdSub').textContent=`${TXL[t.type]} · ${isoD(t.date)} · ${fmt(t.amount)} ${(L.find(l=>l.no===t.loan_no)||{}).cur||''}`;
+ $('#eDate').value=t.date;$('#eLoan').innerHTML=L.map(l=>`<option value="${l.no}">${l.no} (${l.cur} · ${PUR[l.purpose]||''})</option>`).join('');$('#eLoan').value=t.loan_no;
+ $('#eType').value=t.type;$('#eCat').innerHTML=catOpts(t.category||'','ຍັງບໍ່ກຳນົດ');$('#eCat').disabled=t.type!=='draw';$('#eAmt').value=t.amount;$('#eNote').value=t.note||'';
+ $('#txEdMsg').textContent='';$('#txDel').textContent='ລົບລາຍການ';delete $('#txDel').dataset.sure;$('#txEdModal').hidden=false;$('#eAmt').focus()}
+const closeTxEdit=()=>{$('#txEdModal').hidden=true;EDTX=null};
+$('#txEdClose').onclick=closeTxEdit;$('#txEdModal').addEventListener('click',e=>{if(e.target.id==='txEdModal')closeTxEdit()});
+$('#eType').addEventListener('change',e=>{$('#eCat').disabled=e.target.value!=='draw'});
+async function persistLoans(nos){for(const no of new Set(nos)){const r=LOANS.find(x=>x.loan_no===no);if(!r)continue;const {error}=await sb.from('loans').update({balance:r.balance,available:r.available,interest_due:r.interest_due}).eq('loan_no',no);if(error)throw error}}
+$('#txEdForm').addEventListener('submit',async e=>{e.preventDefault();const t=EDTX;if(!t)return;const msg=$('#txEdMsg');
+ const d=$('#eDate').value,no=$('#eLoan').value,ty=$('#eType').value,amt=+$('#eAmt').value,cat=ty==='draw'?($('#eCat').value||null):null,note=$('#eNote').value.trim()||null;
+ if(!d){msg.textContent='ເລືອກວັນທີ';return}if(!(amt>0)){msg.textContent='ໃສ່ຈຳນວນເງິນ ຫຼາຍກວ່າ 0';return}
+ const oldRow=LOANS.find(x=>x.loan_no===t.loan_no),newRow=LOANS.find(x=>x.loan_no===no);if(!oldRow||!newRow)return;
+ const moneyChanged=no!==t.loan_no||ty!==t.type||amt!==+t.amount;msg.textContent='ກຳລັງບັນທຶກ …';
+ try{const {error}=await sb.from('loan_txns').update({date:d,loan_no:no,type:ty,amount:amt,category:cat,note}).eq('id',t.id);if(error)throw error;
+  if(moneyChanged){txEffect(oldRow,t.type,+t.amount,-1);txEffect(newRow,ty,amt,1);await persistLoans([t.loan_no,no])}
+  LTX=await fetchAll('loan_txns');closeTxEdit();renderDebt();toast('ແກ້ໄຂລາຍການແລ້ວ')}catch(err){msg.textContent='ບັນທຶກບໍ່ສຳເລັດ: '+(err.message||err)+(String(err.message||'').includes('category')?' · ແລ່ນ SQL migrate_2026_11_cashflow.sql ກ່ອນ':'')}});
+$('#txDel').addEventListener('click',async()=>{const t=EDTX;if(!t)return;const btn=$('#txDel');if(!btn.dataset.sure){btn.dataset.sure=1;btn.textContent='ກົດອີກຄັ້ງ ເພື່ອຢືນຢັນການລົບ';return}
+ const row=LOANS.find(x=>x.loan_no===t.loan_no);$('#txEdMsg').textContent='ກຳລັງລົບ …';
+ try{const {error}=await sb.from('loan_txns').delete().eq('id',t.id);if(error)throw error;if(row){txEffect(row,t.type,+t.amount,-1);await persistLoans([t.loan_no])}
+  LTX=await fetchAll('loan_txns');closeTxEdit();renderDebt();toast('ລົບລາຍການແລ້ວ')}catch(err){$('#txEdMsg').textContent='ລົບບໍ່ສຳເລັດ: '+(err.message||err)}});
+/* ===== Cash flow (Banking_Daily) — thousand CNY equivalent ===== */
+const CF={sel:null,u:null,t:null,c:null};
+const CF_LBL={in_starch:'ຂາຍແປ້ງ (ລວມເງິນມັດຈຳ)',in_pulp:'ຂາຍກາກມັນ',in_other:'ລາຍຮັບອື່ນ',cassava:'ຊື້ມັນຕົ້ນ ແລະ ຄ່ານາຍໜ້າ',staff:'ເງິນເດືອນ, ອາຫານ ແລະ ສະຫວັດດີການ',energy:'ຖ່ານຫີນ, ໄຟຟ້າ ແລະ ນ້ຳມັນ',transport:'ຂົນສົ່ງ ແລະ ແຮງງານຂົນຍ້າຍ',maint:'ສ້ອມແປງ ແລະ ອາໄຫຼ່',pack:'ຖົງ ແລະ ອຸປະກອນບັນຈຸ',petty:'ໂອນເຂົ້າເງິນສົດຍ່ອຍ / ເງິນສຳຮອງ',admin:'ບໍລິຫານ, ຄ່າທຳນຽມ ແລະ ອື່ນໆ',capex:'ກໍ່ສ້າງ ແລະ ຊື້ຊັບສິນ',draw:'ເບີກເງິນກູ້',repay:'ຊຳລະຕົ້ນທຶນເງິນກູ້',interest:'ຊຳລະດອກເບ້ຍ',x:'ໂອນ ແລະ ແລກປ່ຽນ ລະຫວ່າງບັນຊີ (ສຸດທິ)'};
+const CF_ORD={op:['in_starch','in_pulp','in_other','cassava','staff','energy','transport','maint','pack','petty','admin'],inv:['capex'],fin:['draw','repay','interest'],int:['x']};
+function cfGrp(r){const a=String(r.activity||'').toUpperCase(),k=String(r.code||'');
+ if(a==='ACC TO ACC'||a==='EXCHANGE')return['int','x'];if(a.startsWith('BANK LOAN-INCREASE'))return['fin','draw'];if(a.startsWith('BANK LOAN-DECREASE'))return['fin','repay'];if(/^Interest Loan/i.test(k))return['fin','interest'];
+ if(a==='REVENUE')return /Residue/i.test(k)?['op','in_pulp']:/Topioca|Tapioca/i.test(k)?['op','in_starch']:['op','in_other'];
+ if(/Construction|Asset/i.test(k))return['inv','capex'];if(/Cassava/i.test(k))return['op','cassava'];if(/Salary|Staff Food|Canteen|Insurance|Perdiem/i.test(k))return['op','staff'];
+ if(/Coal|Electricity|Fuel/i.test(k))return['op','energy'];if(/Transportation|Labour up-down/i.test(k))return['op','transport'];if(/Sparepart|Repair/i.test(k))return['op','maint'];
+ if(/Bag|Packing|Factory supply/i.test(k))return['op','pack'];if(k==='Transfer')return['op','petty'];return['op','admin']}
+['#cfC','#cfU','#cfT'].forEach(id=>$(id).addEventListener('input',()=>{CF[id==='#cfC'?'c':id==='#cfU'?'u':'t']=+$(id).value||null;renderCash()}));
+function renderCash(){
+ if(BANK_ERR){$('#kCash').innerHTML='';$('#tCash').innerHTML=`<tbody><tr><td class="issue">ຍັງບໍ່ມີຕາຕະລາງ bank_txns ໃນຖານຂໍ້ມູນ. ແລ່ນໄຟລ໌ supabase/migrate_2026_11_cashflow.sql ໃນ Supabase SQL Editor ກ່ອນ, ແລ້ວນຳເຂົ້າໄຟລ໌ 04 ຄືນ.</td></tr></tbody>`;return}
+ if(!BANK.length){$('#kCash').innerHTML='';$('#tCash').innerHTML='<tbody><tr><td class="issue">ຍັງບໍ່ມີຂໍ້ມູນ. ນຳເຂົ້າໄຟລ໌ 04 ທີ່ມີ Sheet Banking_Daily.</td></tr></tbody>';['#chCash','#tCashBal','#tCashDet'].forEach(x=>$(x).innerHTML='');return}
+ const C=CF.c||FX,U=CF.u||(SET.fx_other&&+SET.fx_other.usd)||22000,T=CF.t||(SET.fx_other&&+SET.fx_other.thb)||680;$('#cfC').value=C;$('#cfU').value=U;$('#cfT').value=T;
+ const fx=c=>c==='CNY'?1:c==='LAK'?1/C:c==='USD'?U/C:T/C;const val=r=>((+r.amt_in||0)-(+r.amt_out||0))*fx(r.currency);const m=v=>{const x=v/1e3;return (x<0?'−':'')+fmt(Math.abs(x))};
+ const pref=st.f==='all'?null:st.f==='xan'?'SNK':'MN';const accOk=a=>!pref||String(a).startsWith(pref);
+ const last=BANK.reduce((t,r)=>r.date&&r.date>t?r.date:t,'');let [a,b]=rng();if(b>last)b=last;
+ const AR=BANK.filter(r=>accOk(r.account));const rs=AR.filter(r=>r.date&&r.date>=a&&r.date<=b);
+ const balAt=d=>AR.reduce((t,r)=>t+(+r.opening||0)*fx(r.currency)+(r.date&&r.date<=d?val(r):0),0);
+ const prev=d=>{const x=toDate(d);x.setDate(x.getDate()-1);return isoOf(x)};const endOf=mo=>{const x=new Date(+mo.slice(0,4),+mo.slice(5,7),0);const e=isoOf(x);return e>b?b:e};
+ const months=[];{let d=toDate(a.slice(0,7)+'-01');while(isoOf(d).slice(0,7)<=b.slice(0,7)){months.push(isoOf(d).slice(0,7));d.setMonth(d.getMonth()+1)}}
+ const G=rs.map(r=>[r,cfGrp(r)]);const S=(mo,sec,key)=>G.filter(([r,g])=>(!mo||r.date.slice(0,7)===mo)&&g[0]===sec&&(!key||g[1]===key)).reduce((t,[r])=>t+val(r),0);
+ const open=balAt(prev(a)),close=balAt(b),opIn=G.filter(([,g])=>g[0]==='op'&&g[1].startsWith('in_')).reduce((t,[r])=>t+val(r),0),opNet=S(null,'op'),net=['op','inv','fin','int'].reduce((t,x)=>t+S(null,x),0);
+ $('#kCash').innerHTML=kpi(`ເງິນສົດ ຕົ້ນງວດ (${isoD(a)})`,m(open),'ພັນຢວນ','ທຸກບັນຊີ ທຽບເທົ່າຢວນ')+kpi('ເງິນເຂົ້າ ຈາກການດຳເນີນງານ',m(opIn),'ພັນຢວນ','ຂາຍແປ້ງ, ກາກມັນ ແລະ ອື່ນໆ')+kpi('ເງິນອອກ ຈາກການດຳເນີນງານ',m(opNet-opIn),'ພັນຢວນ','ຊື້ມັນຕົ້ນ, ເງິນເດືອນ, ພະລັງງານ …')+
+  kpi('ກະແສເງິນສົດ ສຸດທິ',(net>0?'+':'')+m(net),'ພັນຢວນ',`${isoD(a)} – ${isoD(b)}`,[net>=0?'good':'warn',net>=0?'ເງິນສົດ ເພີ່ມຂຶ້ນ':'ເງິນສົດ ຫຼຸດລົງ'])+kpi(`ເງິນສົດ ທ້າຍງວດ (${isoD(b)})`,m(close),'ພັນຢວນ',`ຂໍ້ມູນ Banking ຮອດ ${isoD(last)}`);
+ $('#cfNote').textContent=`${isoD(a)} – ${isoD(b)} · ${rs.length} ລາຍການ · ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]}`;
+ const n=months.length+2,line=(lbl,f,cls,key)=>{const tot=f(null);return `<tr class="${cls||''}${key?' click':''}${key&&key===CF.sel?' on':''}"${key?` data-k="${key}"`:''}><td>${lbl}</td>${months.map(mo=>{const v=f(mo);return `<td class="n${v<0?' neg':''}">${Math.abs(v)<500?'—':m(v)}</td>`}).join('')}<td class="n${tot<0?' neg':''}"><b>${Math.abs(tot)<500?'—':m(tot)}</b></td></tr>`};
+ const has=k=>G.some(([,g])=>g[1]===k);let t='';
+ t+=`<tr class="sec"><td colspan="${n}">I. ກະແສເງິນສົດ ຈາກການດຳເນີນງານ</td></tr>`;CF_ORD.op.forEach(k=>{if(has(k))t+=line(CF_LBL[k],mo=>S(mo,'op',k),'sub','op:'+k)});t+=line('ສຸດທິ ຈາກການດຳເນີນງານ',mo=>S(mo,'op'),'net');
+ t+=`<tr class="sec"><td colspan="${n}">II. ກະແສເງິນສົດ ຈາກການລົງທຶນ</td></tr>`+line(CF_LBL.capex,mo=>S(mo,'inv','capex'),'sub','inv:capex')+line('ສຸດທິ ຈາກການລົງທຶນ',mo=>S(mo,'inv'),'net');
+ t+=`<tr class="sec"><td colspan="${n}">III. ກະແສເງິນສົດ ຈາກການເງິນ</td></tr>`;CF_ORD.fin.forEach(k=>t+=line(CF_LBL[k],mo=>S(mo,'fin',k),'sub','fin:'+k));t+=line('ສຸດທິ ຈາກການເງິນ',mo=>S(mo,'fin'),'net');
+ t+=line('IV. '+CF_LBL.x,mo=>S(mo,'int'),'','int:x')+line('ກະແສເງິນສົດ ສຸດທິ (I+II+III+IV)',mo=>['op','inv','fin','int'].reduce((s,x)=>s+S(mo,x),0),'net');
+ const mo0=mo=>mo===a.slice(0,7)?prev(a):prev(mo+'-01');
+ t+=`<tr class="big"><td>ເງິນສົດ ຕົ້ນງວດ</td>${months.map(mo=>`<td class="n">${m(balAt(mo0(mo)))}</td>`).join('')}<td class="n">${m(open)}</td></tr><tr class="big"><td>ເງິນສົດ ທ້າຍງວດ</td>${months.map(mo=>`<td class="n">${m(balAt(endOf(mo)))}</td>`).join('')}<td class="n">${m(close)}</td></tr>`;
+ $('#tCash').innerHTML=`<thead><tr><th>ລາຍການ</th>${months.map(mo=>`<th class="n">${M[mi(toDate(mo+'-01'))]||mo}</th>`).join('')}<th class="n">ລວມ</th></tr></thead><tbody>${t}</tbody>`;
+ document.querySelectorAll('#tCash tr[data-k]').forEach(tr=>tr.onclick=()=>{CF.sel=tr.dataset.k;renderCash()});
+ // chart
+ const ins=months.map(mo=>G.filter(([r,g])=>r.date.slice(0,7)===mo&&g[0]!=='int').reduce((s,[r])=>s+Math.max(0,val(r)),0)/1e3),outs=months.map(mo=>G.filter(([r,g])=>r.date.slice(0,7)===mo&&g[0]!=='int').reduce((s,[r])=>s+Math.max(0,-val(r)),0)/1e3),cl=months.map(mo=>balAt(endOf(mo))/1e3);
+ const W=560,H=250,Pl=56,Pr=12,Pt=14,Pb=28,iw=W-Pl-Pr,ih=H-Pt-Pb,mx=Math.max(...ins,...outs,...cl,1)*1.08,stp=niceStep(mx/5),top=Math.ceil(mx/stp)*stp,y=v=>Pt+ih-v/top*ih,gw=iw/months.length,x=i=>Pl+gw*(i+.5),bw=Math.min(24,gw*.3);
+ let g=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="ເງິນເຂົ້າ ເງິນອອກ ແລະ ຍອດເງິນສົດ">`;for(let v=0;v<=top+1e-9;v+=stp)g+=`<line class="grid" x1="${Pl}" x2="${W-Pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${Pl-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;
+ months.forEach((mo,i)=>{g+=`<rect x="${x(i)-bw-1}" y="${y(ins[i])}" width="${bw}" height="${y(0)-y(ins[i])}" rx="3" fill="var(--forest-2)"/><rect x="${x(i)+1}" y="${y(outs[i])}" width="${bw}" height="${y(0)-y(outs[i])}" rx="3" fill="#d9822b"/><text x="${x(i)}" y="${H-8}" text-anchor="middle">${(M[mi(toDate(mo+'-01'))]||mo).split(' ')[0]}</text>`});
+ g+=`<path d="${cl.map((v,i)=>`${i?'L':'M'}${x(i)},${y(v)}`).join('')}" fill="none" stroke="#2f5fb0" stroke-width="2.4"/>`+cl.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="#2f5fb0"/>`).join('')+'</svg>';$('#chCash').innerHTML=g;
+ // balances by account
+ const keys=[...new Set(AR.map(r=>r.account+'|'+r.currency))].sort();let tk=0;$('#cbNote').textContent='ຍອດ ຮອດ '+isoD(b);
+ const bl=keys.map(k=>{const [ac,cu]=k.split('|');const v=AR.filter(r=>r.account===ac&&r.currency===cu).reduce((s,r)=>s+(+r.opening||0)+(r.date&&r.date<=b?(+r.amt_in||0)-(+r.amt_out||0):0),0);return [ac,cu,v]}).filter(x=>Math.abs(x[2])>=5);
+ $('#tCashBal').innerHTML=`<thead><tr><th>ບັນຊີ</th><th>ສະກຸນ</th><th class="n">ຍອດເງິນ</th><th class="n">ທຽບເທົ່າ ພັນຢວນ</th></tr></thead><tbody>`+bl.map(([ac,cu,v])=>{tk+=v*fx(cu);return `<tr><td class="mono">${esc(ac)}</td><td>${cu}</td><td class="n">${fmt(v)}</td><td class="n">${m(v*fx(cu))}</td></tr>`}).join('')+`<tr class="total"><td colspan="3">ລວມ ທຽບເທົ່າຢວນ</td><td class="n">${m(tk)}</td></tr></tbody>`;
+ // detail
+ if(!CF.sel){$('#cdTitle').textContent='ລາຍການ';$('#cdNote').textContent='ກົດແຖວໃນງົບກະແສເງິນສົດ ເພື່ອເບິ່ງລາຍການ';$('#tCashDet').innerHTML='';return}
+ const [sec,key]=CF.sel.split(':');const L=G.filter(([,g2])=>g2[0]===sec&&g2[1]===key).map(([r])=>r).sort((p,q)=>q.date.localeCompare(p.date));
+ $('#cdTitle').textContent='ລາຍການ: '+CF_LBL[key];$('#cdNote').textContent=`${L.length} ລາຍການ · ລວມ ${m(L.reduce((s,r)=>s+val(r),0))} ພັນຢວນ`;
+ $('#tCashDet').innerHTML=`<thead><tr><th>ວັນທີ</th><th>ບັນຊີ</th><th>ລະຫັດ</th><th>ລາຍລະອຽດ</th><th class="n">ເຂົ້າ</th><th class="n">ອອກ</th><th>ສະກຸນ</th><th class="n">ພັນຢວນ</th></tr></thead><tbody>`+L.slice(0,300).map(r=>`<tr><td>${isoD(r.date)}</td><td class="mono">${esc(r.account)}</td><td>${esc(r.code||'')}</td><td style="max-width:420px">${esc(r.descr||'')}</td><td class="n pos">${+r.amt_in?fmt(r.amt_in):''}</td><td class="n neg">${+r.amt_out?fmt(r.amt_out):''}</td><td>${r.currency}</td><td class="n">${m(val(r))}</td></tr>`).join('')+'</tbody>'}
 function renderBal(){
  const no=$('#balLoan').value;const l=LOANS.map(LN).find(x=>x.no===no);if(!l)return;
  const tx=LTX.filter(t=>t.loan_no===no&&t.type!=='int').slice().sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
@@ -653,7 +819,7 @@ $('#txForm').addEventListener('submit',async e=>{e.preventDefault();const msg=$(
  if(t==='repay'&&amt>l.bal){msg.textContent=`ຊຳລະເກີນຍອດໜີ້: ຍອດເຫຼືອ ${fmt(l.bal)} ${l.cur}`;return}
  const upd={};if(t==='draw'){upd.balance=l.bal+amt;upd.available=l.avail-amt}else if(t==='repay'){upd.balance=l.bal-amt;if(l.purpose==='wc')upd.available=l.avail+amt}else{upd.interest_due=Math.max(0,l.intDue-amt)}
  msg.textContent='ກຳລັງບັນທຶກ …';
- const r1=await sb.from('loan_txns').insert({date:d,loan_no:l.no,type:t,amount:amt,prev_balance:l.bal,note:$('#txNote').value.trim()||null});if(r1.error){msg.textContent='ບັນທຶກບໍ່ສຳເລັດ: '+r1.error.message;return}
+ const r1=await sb.from('loan_txns').insert({date:d,loan_no:l.no,type:t,amount:amt,prev_balance:l.bal,note:$('#txNote').value.trim()||null,...(t==='draw'?{category:$('#txCat').value||null}:{})});if(r1.error){msg.textContent='ບັນທຶກບໍ່ສຳເລັດ: '+r1.error.message;return}
  const r2=await sb.from('loans').update(upd).eq('loan_no',l.no);if(r2.error){msg.textContent='ອັບເດດຍອດບໍ່ສຳເລັດ: '+r2.error.message;return}
  Object.assign(row,upd);LTX=await fetchAll('loan_txns');renderDebt();$('#txAmt').value='';$('#txNote').value='';msg.textContent=`ບັນທຶກແລ້ວ: ${TXL[t]} ${fmt(amt)} ${l.cur}`;toast(`ບັນທຶກແລ້ວ: ${TXL[t]} ${fmt(amt)} ${l.cur} · ${l.no}`)});
 
@@ -669,9 +835,8 @@ applyZoom();
 /* ===== Login & startup ===== */
 const DOMAIN=CFG.usernameDomain||'ls.local';
 function showLogin(msg){$('#app').hidden=true;$('#login').hidden=false;$('#loginMsg').textContent=msg||'';setTimeout(()=>$('#lgUser').focus(),50)}
-function buildPeriodOpts(){const sel=$('#period');sel.innerHTML=`<option value="season">ລະດູ ${SEASON} (ເຖິງປັດຈຸບັນ)</option>`+[...Array(NOWI+1).keys()].map(i=>`<option value="${i}">${M[i]}</option>`).join('');
- if(st.p!=='season'&&!(+st.p<=NOWI))st.p='season';sel.value=st.p}
-async function refreshAll(){await loadAll();buildPeriodOpts();render();renderDebt();window.dispatchEvent(new Event('ls:data'))}
+function buildPeriodOpts(){if(!['season','month','custom'].includes(st.p))st.p='season';syncPrd()}
+async function refreshAll(){await loadAll();buildPeriodOpts();render();renderDebt();renderCash();window.dispatchEvent(new Event('ls:data'))}
 // data for the 3D factory model (js/factory3d-scene.js)
 window.LS_3D=()=>{const out={};for(const fc of ['xan','nan']){const S=STK[fc]||{},A=act[fc]||{};const sum=k=>(A[k]||[]).reduce((a,b)=>a+(b||0),0);const proc=sum('proc'),prod=sum('prod'),exp=sum('exp');
  const ds=PROC.filter(r=>r.factory===fc&&r.d).map(r=>+r.d);const last=ds.length?new Date(Math.max(...ds)):null;

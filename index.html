@@ -400,7 +400,7 @@ table.pvt tr.fut td.ac{font-weight:400}
 .band-cassava{position:absolute;right:max(24px,4%);bottom:6px;height:86%;width:auto;filter:drop-shadow(0 4px 6px rgb(60 40 20 / .12))}
 @media (max-width:900px){.band-art{display:none}}
 
-.band-comp{position:absolute;right:max(20px,3%);bottom:0;height:100%;width:300px;pointer-events:none;z-index:0}
+.band-comp{position:absolute;right:max(20px,3%);bottom:50px;height:calc(100% - 50px);width:300px;pointer-events:none;z-index:0}
 .band-comp .bc-shadow{position:absolute;inset:0;width:100%;height:100%}
 .band-comp .bc-bag{position:absolute;left:62px;bottom:9px;height:80%;aspect-ratio:120/150;transform:rotate(-4deg);filter:drop-shadow(2px 4px 4px rgb(60 40 20 / .14))}
 .band-comp .bc-bag svg{width:100%;height:100%;display:block}
@@ -535,11 +535,29 @@ body{background:#f5f7f4}main{font-size:14.5px}
 .seg button{border-radius:9px;padding:7px 14px;transition:background .2s,color .2s}
 .seg button[aria-pressed="true"]{background:var(--forest-2);box-shadow:0 2px 6px -2px rgba(23,112,58,.5)}
 .band select,.zoom{border-radius:10px!important}
+.lcats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px}
+.lcat{border:1px solid var(--line);border-radius:12px;padding:10px 13px;display:grid;gap:2px}
+.lcat small{color:var(--ink-3);font-size:12px;display:flex;align-items:center;gap:6px}.lcat small i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.lcat b{font-size:19px;font-variant-numeric:tabular-nums}.lcat em{font-style:normal;color:var(--ink-3);font-size:12px}
+.lcat.tot{background:var(--surface-2)}
+.ctag{font-size:12px;font-weight:600;border-radius:7px;padding:2px 8px;white-space:nowrap;display:inline-flex;gap:5px;align-items:center}.ctag i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.edb{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:3px 9px;font-weight:600;font-size:12px}
+.edb:hover{border-color:var(--forest-2);color:var(--forest-2)}
+.cft tr.sec td{background:var(--surface-2);font-weight:700;color:var(--forest-2)}
+.cft tr.sub td:first-child{padding-left:24px}
+.cft tr.net td{font-weight:700;border-top:1.5px solid var(--ink-3)}
+.cft tr.click{cursor:pointer}.cft tr.click:hover td,.cft tr.on td{background:var(--warn-bg)}
+.cft tr.big td{font-weight:800;background:var(--surface-2)}
+.prd{display:flex;flex-wrap:wrap;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:4px 6px}
+.prd button{border:0;border-radius:7px;padding:5px 10px;font-weight:600;font-size:12.5px;background:transparent;color:var(--ink-2)}
+.prd button[aria-pressed=true]{background:var(--forest-2);color:#fff}
+.prd label{font-size:12px;color:var(--ink-3)}
+.prd input{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:7px;padding:4px 6px;font-size:12.5px}
 #repOpen{background:var(--forest-2);color:#fff;border-color:var(--forest-2);border-radius:10px;font-weight:600;box-shadow:0 2px 8px -3px rgba(23,112,58,.6)}
 #repOpen:hover{background:var(--forest)}
 /* tabs with icons */
-.tabs{gap:4px;margin-top:16px}
-.tabs a{display:inline-flex;align-items:center;gap:8px;padding:11px 16px 13px;border-radius:0;font-weight:500;color:var(--ink-3);transition:color .2s;position:relative}
+.tabs{gap:2px;margin-top:16px;position:relative;z-index:1}
+.tabs a{display:inline-flex;align-items:center;gap:7px;padding:11px 12px 13px;border-radius:0;font-weight:500;color:var(--ink-3);transition:color .2s;position:relative}
 .tabs a::before{content:"";width:18px;height:18px;background:currentColor;flex:none;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat;opacity:.9}
 .tabs a[aria-current="page"]{background:transparent;color:var(--forest-2);font-weight:700;box-shadow:none}
 .tabs a[aria-current="page"]::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--forest-2)}
@@ -551,6 +569,7 @@ body{background:#f5f7f4}main{font-size:14.5px}
 .tabs a[href="#cost"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='m19 9-5 5-4-4-3 3'/%3E%3C/svg%3E")}
 .tabs a[href="#stock"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z'/%3E%3Cpath d='M6 18h12'/%3E%3Cpath d='M6 14h12'/%3E%3Crect width='12' height='12' x='6' y='10'/%3E%3C/svg%3E")}
 .tabs a[href="#debt"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='3' x2='21' y1='22' y2='22'/%3E%3Cline x1='6' x2='6' y1='18' y2='11'/%3E%3Cline x1='10' x2='10' y1='18' y2='11'/%3E%3Cline x1='14' x2='14' y1='18' y2='11'/%3E%3Cline x1='18' x2='18' y1='18' y2='11'/%3E%3Cpolygon points='12 2 20 7 4 7'/%3E%3C/svg%3E")}
+.tabs a[href="#cash"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='12' rx='2'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3Cpath d='M6 12h.01M18 12h.01'/%3E%3C/svg%3E")}
 .tabs a[href="#import"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='17 8 12 3 7 8'/%3E%3Cline x1='12' x2='12' y1='3' y2='15'/%3E%3C/svg%3E")}
 /* info note */
 main .note{background:#fff;border:1px solid var(--line);border-left:4px solid var(--forest-2);border-style:solid;box-shadow:var(--shadow);border-radius:12px}
@@ -630,7 +649,7 @@ button,a,select{cursor:pointer}
           <button type="button" data-f="xan" aria-pressed="false">ໂຮງງານ ຊະນະຄາມ</button>
           <button type="button" data-f="nan" aria-pressed="false">ໂຮງງານ ນານ</button>
         </div>
-        <select id="period" aria-label="ໄລຍະເວລາ"><option value="season">ລະດູນີ້ (ເຖິງປັດຈຸບັນ)</option></select>
+        <div class="prd" id="prd" role="group" aria-label="ໄລຍະເວລາ"><button type="button" data-p="season" aria-pressed="true">ລະດູນີ້</button><button type="button" data-p="month" aria-pressed="false">ເດືອນນີ້</button><label for="pFrom">ຈາກ</label><input type="date" id="pFrom"><label for="pTo">ຫາ</label><input type="date" id="pTo"></div>
         <div class="zoom" role="group" aria-label="ຂະໜາດໜ້າຈໍ"><button type="button" id="zOut" aria-label="ຊູມອອກ">−</button><button type="button" id="zReset" aria-label="ກັບຄືນ 100%">100%</button><button type="button" id="zIn" aria-label="ຊູມເຂົ້າ">+</button></div>
         <button type="button" class="btn rep-btn" id="repOpen">⤓ ດຶງ Report</button>
         <div class="who-box"><span class="who" id="who"></span><button type="button" class="logout" id="logout">ອອກຈາກລະບົບ</button></div>
@@ -644,6 +663,7 @@ button,a,select{cursor:pointer}
       <a href="#cost">ຕົ້ນທຶນ & ກຳໄລ</a>
       <a href="#stock">ພາບລວມໂຮງງານ</a>
       <a href="#debt">ພັນທະໜີ້ສິນ</a>
+      <a href="#cash">ກະແສເງິນສົດ</a>
       <a href="#import" class="admin-only">ນຳເຂົ້າ Excel</a>
     </nav>
   </div>
@@ -770,6 +790,11 @@ button,a,select{cursor:pointer}
       <p class="issue" style="margin-top:10px">ແຕ່ລະໃບແຈ້ງໜີ້ ຫັກຄືນເງິນມັດຈຳ ຕາມ % ຂອງສັນຍາ, ສ່ວນທີ່ເຫຼືອ ລູກຄ້າຈ່າຍເປັນເງິນສົດ.</p>
     </div>
     <div class="panel">
+      <header><h2>ສິນຄ້າຄ້າງສາງ (ລະອຽດ)</h2><p>ຈາກ Sheet 4.x ແລະ 5.x · ມູນຄ່າ ຕາມລາຄາສົ່ງອອກລ່າສຸດ</p></header>
+      <div class="kpis" id="kStk"></div>
+      <div class="tbl" style="margin-top:12px"><table id="tStk"></table></div>
+    </div>
+    <div class="panel">
       <header><h2>ເງິນມັດຈຳສັນຍາ</h2></header>
       <div class="tbl"><table id="tDep"></table></div>
       <p class="issue" style="margin-top:10px">ມັດຈຳຄົງເຫຼືອ = ໄດ້ຮັບແລ້ວ − ຫັກຈາກເງິນມັດຈຳແລ້ວ</p>
@@ -857,6 +882,18 @@ button,a,select{cursor:pointer}
       <div class="tbl"><table id="tDebt"></table></div>
       <p class="issue" style="margin-top:10px">ຍອດກີບ ຂອງເງິນກູ້ສະກຸນ CNY ຄິດດ້ວຍອັດຕາແລກປ່ຽນດ້ານເທິງ. ຍອດເຫຼືອ ແລະ ວົງເງິນຍັງເບີກໄດ້ ອັບເດດອັດຕະໂນມັດ ເມື່ອບັນທຶກລາຍການ.</p>
     </div>
+    <div class="panel">
+      <header><h2>ການນຳໃຊ້ເງິນກູ້ ແຍກຕາມປະເພດ</h2><p id="catNote"></p></header>
+      <div class="lcats" id="loanCats"></div>
+    </div>
+    <div class="panel">
+      <header><h2>ກວດການນຳໃຊ້ເງິນກູ້ ທຶນໝູນວຽນ ທຽບກັບຍອດເກັບຊື້ມັນຕົ້ນ</h2><p id="useNote">ນັບແຕ່ມື້ເບີກເງິນຄັ້ງທຳອິດ ໃນໄລຍະທີ່ເລືອກ · ລ້ານກີບ</p></header>
+      <div class="kpis" id="useK"></div>
+      <div class="grid2" style="margin-top:12px">
+        <div><div id="useCh"></div><div class="legend" style="margin-top:6px"><span><i class="line" style="background:#2f5fb0;height:3px"></i>ເບີກເງິນກູ້ ທຶນໝູນວຽນ (ສະສົມ)</span><span><i class="line" style="background:var(--forest-2);height:3px"></i>ຍອດເກັບຊື້ມັນຕົ້ນ (ສະສົມ)</span></div></div>
+        <div class="tbl"><table id="useT"></table></div>
+      </div>
+    </div>
     <div class="grid2">
       <div class="panel">
         <header><h2>ບັນທຶກລາຍການ</h2><p>ເບີກເງິນກູ້ · ຊຳລະຕົ້ນທຶນ · ຊຳລະດອກເບ້ຍ</p></header>
@@ -868,6 +905,7 @@ button,a,select{cursor:pointer}
             <option value="repay">ຊຳລະຕົ້ນທຶນ</option>
             <option value="int">ຊຳລະດອກເບ້ຍ</option>
           </select></label>
+          <label for="txCat">ປະເພດການນຳໃຊ້<select id="txCat"></select></label>
           <label for="txAmt">ຈຳນວນ <span id="txCur" class="src"></span><input type="number" id="txAmt" min="0" step="any" inputmode="decimal" required></label>
           <label for="txNote" class="wide">ໝາຍເຫດ / ຈຸດປະສົງ<input type="text" id="txNote" maxlength="120" placeholder="ເຊັ່ນ ໃຊ້ໝູນວຽນເກັບຊື້ມັນຕົ້ນ"></label>
           <div class="wide debt-actions"><span class="src" id="txMsg" role="status"></span><button type="submit" class="btn primary">ບັນທຶກລາຍການ</button></div>
@@ -884,6 +922,26 @@ button,a,select{cursor:pointer}
       <div class="tbl"><table id="tTx"></table></div>
       
     </div>
+    <div class="panel admin-only">
+      <header><h2>ປະເພດການນຳໃຊ້ເງິນກູ້</h2><p>ເພີ່ມ ຫຼື ແກ້ຊື່ປະເພດ · ປະເພດທີ່ໝາຍ "ກວດກັບຍອດເກັບຊື້" ຈະຖືກນຳໄປທຽບກັບຍອດເກັບຊື້ມັນຕົ້ນ</p></header>
+      <div class="tbl"><table id="tCats"></table></div>
+      <form id="catForm" class="debt-form" novalidate style="margin-top:10px"><label for="catNew" class="wide">ເພີ່ມປະເພດໃໝ່<input type="text" id="catNew" maxlength="40" placeholder="ເຊັ່ນ ຊຳລະຄ່າໄຟຟ້າ"></label><div class="wide debt-actions"><span class="src" id="catMsg" role="status"></span><button type="submit" class="btn">ເພີ່ມປະເພດ</button></div></form>
+    </div>
+    <div class="rep-modal" id="txEdModal" hidden role="dialog" aria-modal="true" aria-labelledby="txEdTitle">
+      <div class="rep-box">
+        <div class="rep-top"><h2 id="txEdTitle">ແກ້ໄຂລາຍການ</h2><button type="button" class="rep-x" id="txEdClose" aria-label="ປິດ">✕</button></div>
+        <p class="rep-sub" id="txEdSub"></p>
+        <form id="txEdForm" class="debt-form" novalidate>
+          <label for="eDate">ວັນທີ<input type="date" id="eDate"></label>
+          <label for="eLoan">ເງິນກູ້<select id="eLoan"></select></label>
+          <label for="eType">ລາຍການ<select id="eType"><option value="draw">ເບີກເງິນກູ້</option><option value="repay">ຊຳລະຕົ້ນທຶນ</option><option value="int">ຊຳລະດອກເບ້ຍ</option></select></label>
+          <label for="eCat">ປະເພດການນຳໃຊ້<select id="eCat"></select></label>
+          <label for="eAmt">ຈຳນວນ<input type="number" id="eAmt" min="0" step="any"></label>
+          <label for="eNote" class="wide">ໝາຍເຫດ<input type="text" id="eNote" maxlength="120"></label>
+          <div class="wide debt-actions"><button type="button" class="btn" id="txDel" style="background:var(--crit-bg,#fde8e8);color:var(--crit,#c02a2a)">ລົບລາຍການ</button><span class="src" id="txEdMsg" role="status" style="flex:1"></span><button type="submit" class="btn primary">ບັນທຶກການແກ້ໄຂ</button></div>
+        </form>
+      </div>
+    </div>
     <div class="rep-modal" id="adjModal" hidden role="dialog" aria-modal="true" aria-labelledby="adjTitle">
       <div class="rep-box">
         <div class="rep-top"><h2 id="adjTitle">ປັບຍອດ</h2><button type="button" class="rep-x" id="adjClose" aria-label="ປິດ">✕</button></div>
@@ -898,6 +956,23 @@ button,a,select{cursor:pointer}
         </form>
       </div>
     </div>
+  </section>
+
+  <!-- CASH FLOW -->
+  <section class="view" id="v-cash" hidden>
+    <div class="kpis hero" id="kCash"></div>
+    <div class="panel">
+      <header><h2>ງົບກະແສເງິນສົດ</h2><p id="cfNote"></p></header>
+      <div class="debt-fx"><span class="src">ອັດຕາແລກປ່ຽນ (ກີບ ຕໍ່ 1 ໜ່ວຍ):</span><label for="cfC">CNY</label><input type="number" id="cfC" min="1" step="1"><label for="cfU">USD</label><input type="number" id="cfU" min="1" step="1"><label for="cfT">THB</label><input type="number" id="cfT" min="1" step="1"><span class="src">ໜ່ວຍ: ພັນຢວນ (ທຽບເທົ່າ)</span></div>
+      <div class="tbl" style="margin-top:10px"><table id="tCash" class="cft"></table></div>
+      <p class="issue" style="margin-top:10px">ຈາກ Sheet Banking_Daily ໃນໄຟລ໌ 04. ການໂອນ ແລະ ແລກປ່ຽນ ລະຫວ່າງບັນຊີ ບໍ່ນັບເປັນລາຍຮັບ-ລາຍຈ່າຍ (ສະແດງແຕ່ຍອດສຸດທິ). ແຍກໂຮງງານ ຕາມບັນຊີທີ່ເງິນເຂົ້າ-ອອກ (SNK / MN). ກົດແຖວ ເພື່ອເບິ່ງລາຍການ.</p>
+    </div>
+    <div class="grid2">
+      <div class="panel"><header><h2>ເງິນເຂົ້າ-ອອກ ແລະ ຍອດເງິນສົດ ລາຍເດືອນ</h2><p>ພັນຢວນ · ບໍ່ລວມການໂອນລະຫວ່າງບັນຊີ</p></header><div id="chCash"></div>
+        <div class="legend" style="margin-top:6px"><span><i style="background:var(--forest-2)"></i>ເງິນເຂົ້າ</span><span><i style="background:#d9822b"></i>ເງິນອອກ</span><span><i class="line" style="background:#2f5fb0;height:3px"></i>ຍອດເງິນສົດທ້າຍເດືອນ</span></div></div>
+      <div class="panel"><header><h2>ຍອດເງິນ ແຕ່ລະບັນຊີ</h2><p id="cbNote"></p></header><div class="tbl"><table id="tCashBal"></table></div></div>
+    </div>
+    <div class="panel"><header><h2 id="cdTitle">ລາຍການ</h2><p id="cdNote">ກົດແຖວໃນງົບກະແສເງິນສົດ ເພື່ອເບິ່ງລາຍການ</p></header><div class="tbl"><table id="tCashDet"></table></div></div>
   </section>
 
   <!-- IMPORT -->

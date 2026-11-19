@@ -106,8 +106,15 @@ create table if not exists public.loans (
 create table if not exists public.loan_txns (
   id bigserial primary key, date date not null, loan_no text not null references public.loans(loan_no) on delete cascade,
   type text not null check (type in ('draw','repay','int','adj')), amount numeric default 0, prev_balance numeric,
-  note text, created_by uuid default auth.uid(), created_at timestamptz not null default now()
+  note text, category text, created_by uuid default auth.uid(), created_at timestamptz not null default now()
 );
+
+-- ---------- ບັນຊີເງິນຝາກ (Banking_Daily) ສຳລັບ ກະແສເງິນສົດ ----------
+create table if not exists public.bank_txns (
+  id bigserial primary key, date date, company text, account text not null, currency text not null,
+  activity text, code text, amt_in numeric default 0, amt_out numeric default 0, opening numeric default 0, descr text
+);
+create index if not exists bank_txns_date on public.bank_txns(date);
 
 -- ---------- ປະຫວັດການນຳເຂົ້າ ----------
 create table if not exists public.import_log (
@@ -121,7 +128,7 @@ do $$
 declare t text;
 begin
   foreach t in array array['settings','plans','procurements','production','stock_moves','shipments',
-                           'contracts','cost_entries','loans','loan_txns','import_log'] loop
+                           'contracts','cost_entries','loans','loan_txns','import_log','bank_txns'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists "read_%1$s" on public.%1$I', t);
     execute format('drop policy if exists "write_%1$s" on public.%1$I', t);
