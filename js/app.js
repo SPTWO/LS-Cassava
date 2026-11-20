@@ -686,7 +686,7 @@ function renderLoanUse(){
  const sumP=(d0,d1)=>Object.entries(day).filter(([d])=>d>=d0&&d<=d1).reduce((s,[,v])=>s+v,0);
  const tonP=(d0,d1)=>PROC.filter(r=>fs.includes(r.factory)&&r.date>=d0&&r.date<=d1).reduce((s,r)=>s+(+r.net_kg||0),0)/1000;
  const add=(d,n)=>{const x=toDate(d);x.setDate(x.getDate()+n);return isoOf(x)};
- $('#useNote').textContent=`ຍອດເກັບຊື້: ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]} · ຂໍ້ມູນເກັບຊື້ຮອດ ${isoD(dataEnd)} · ງວດລ່າສຸດ ມີເວລາໃຊ້ ${USE_DAYS} ມື້ · ພັນຢວນ`;
+ $('#useNote').textContent=`ປະເພດທີ່ກວດ: ${cats().filter(c=>c.track).map(c=>c.n).join(', ')||'—'} · ຍອດເກັບຊື້: ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]} · ຂໍ້ມູນເກັບຊື້ຮອດ ${isoD(dataEnd)} · ງວດລ່າສຸດ ມີເວລາໃຊ້ ${USE_DAYS} ມື້ · ພັນຢວນ`;
  if(!wc.length){$('#useK').innerHTML=`<div class="kpi"><div class="d">ບໍ່ມີການເບີກເງິນກູ້ ປະເພດທີ່ກວດກັບຍອດເກັບຊື້ ໃນ ${isoD(a)} – ${isoD(b)}</div></div>`;$('#useT').innerHTML='';$('#useCh').innerHTML='';return}
  // each draw is matched with purchases until the next draw; the latest one with the next 7 days
  const W=wc.map((t,i)=>{const end=wc[i+1]?add(wc[i+1].date,-1):add(t.date,USE_DAYS-1);const done=end<=dataEnd&&(wc[i+1]||end<today);const to=end<dataEnd?end:dataEnd;
@@ -698,7 +698,7 @@ function renderLoanUse(){
    kpi('ສ່ວນຕ່າງ (ເບີກ − ເກັບຊື້)',(df>0?'+':'')+m(df),'ພັນຢວນ',df>0?'ກວດວ່າເງິນສ່ວນເກີນ ຍັງຢູ່ໃນບັນຊີ ຫຼື ໃຊ້ຜິດເປົ້າໝາຍ':'ເງິນກູ້ທີ່ເບີກ ໃຊ້ເກັບຊື້ມັນໝົດ',df>0?['warn',`ເບີກເກີນຍອດເກັບຊື້ ${pct(df/wK)}`]:['good','ຍອດເກັບຊື້ ຄອບຄຸມເງິນກູ້']):'')+
   (P.length?kpi('ງວດທີ່ຍັງບໍ່ນັບ',m(P.reduce((s,x)=>s+x.w,0)),'ພັນຢວນ',pend.split(': ')[1]||'',['mute',P.map(x=>isoD(x.t.date).slice(0,5)).join(', ')]):'');
  $('#useT').innerHTML=`<thead><tr><th>ເບີກວັນທີ</th><th class="n">ເບີກ</th><th>ຊ່ວງເກັບຊື້</th><th class="n">ເກັບຊື້</th><th class="n">ສ່ວນຕ່າງ</th></tr></thead><tbody>`+
-  W.map(x=>{const d=x.w-x.k;return `<tr><td>${isoD(x.t.date)}</td><td class="n">${m(x.w)}</td><td class="src">${isoD(x.t.date).slice(0,5)} – ${isoD(x.end).slice(0,5)}${x.done?'':`<br><span class="pill mute">${x.end>dataEnd?`ຂໍ້ມູນຮອດ ${isoD(dataEnd).slice(0,5)}`:'ກຳລັງໃຊ້'}</span>`}</td><td class="n">${m(x.k)}</td><td class="n ${x.done?(d>0?'neg':'pos'):'src'}">${x.done?(d>0?'+':'')+m(d):'ຍັງບໍ່ນັບ'}</td></tr>`}).join('')+
+  W.map(x=>{const d=x.w-x.k;return `<tr><td>${isoD(x.t.date)}<div>${catTag(x.t.category)}</div></td><td class="n">${m(x.w)}</td><td class="src">${isoD(x.t.date).slice(0,5)} – ${isoD(x.end).slice(0,5)}${x.done?'':`<br><span class="pill mute">${x.end>dataEnd?`ຂໍ້ມູນຮອດ ${isoD(dataEnd).slice(0,5)}`:'ກຳລັງໃຊ້'}</span>`}</td><td class="n">${m(x.k)}</td><td class="n ${x.done?(d>0?'neg':'pos'):'src'}">${x.done?(d>0?'+':'')+m(d):'ຍັງບໍ່ນັບ'}</td></tr>`}).join('')+
   (D.length?`<tr class="total"><td>ລວມ (ຄົບກຳນົດ)</td><td class="n">${m(wK)}</td><td></td><td class="n">${m(pK)}</td><td class="n ${df>0?'neg':'pos'}">${df>0?'+':''}${m(df)}</td></tr>`:'')+'</tbody>';
  // cumulative chart; the purchase line stops where the purchase data ends
  const start=wc[0].date,last=W[W.length-1].end,endC=last>b?last:b;const days=[];for(let d=toDate(start);isoOf(d)<=endC;d.setDate(d.getDate()+1))days.push(isoOf(d));
