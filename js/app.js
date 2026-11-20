@@ -658,13 +658,13 @@ async function saveCats(list,msgEl){const {error}=await sb.from('settings').upse
 function renderCats(){
  const keep=$('#txCat').value||'wc';$('#txCat').innerHTML=catOpts(keep);$('#txCat').disabled=$('#txType').value!=='draw';
  const [a,b]=rng();const L=LOANS.map(LN);const lc=no=>(L.find(l=>l.no===no)||{cur:'LAK'}).cur;
- const dr=LTX.filter(t=>t.type==='draw'&&t.date>=a&&t.date<=b);const kv=t=>toK(+t.amount,lc(t.loan_no));const tot=dr.reduce((s,t)=>s+kv(t),0);
- $('#catNote').textContent=`ເບີກເງິນກູ້ ${isoD(a)} – ${isoD(b)} · ທຽບເທົ່າກີບ`;
- const card=(c,L2,lbl,col)=>{const k=L2.reduce((s,t)=>s+kv(t),0),y=L2.filter(t=>lc(t.loan_no)==='CNY').reduce((s,t)=>s+(+t.amount),0);
-  return `<div class="lcat"><small><i style="background:${col}"></i>${esc(lbl)}</small><b>${bigK(k)} <em>ກີບ</em></b><em>${L2.length} ຄັ້ງ${y?` · ${fmt(y)} ຢວນ`:''} · ${tot?pct(k/tot):'0%'}</em></div>`};
+ const dr=LTX.filter(t=>t.type==='draw'&&t.date>=a&&t.date<=b);const kv=t=>lc(t.loan_no)==='CNY'?+t.amount:toK(+t.amount,lc(t.loan_no))/FX;const tot=dr.reduce((s,t)=>s+kv(t),0);
+ $('#catNote').textContent=`ເບີກເງິນກູ້ ${isoD(a)} – ${isoD(b)} · ພັນຢວນ (ທຽບເທົ່າ)`;
+ const card=(c,L2,lbl,col)=>{const k=L2.reduce((s,t)=>s+kv(t),0);
+  return `<div class="lcat"><small><i style="background:${col}"></i>${esc(lbl)}</small><b>${fmt(k/1e3)} <em>ພັນຢວນ</em></b><em>${L2.length} ຄັ້ງ · ${tot?pct(k/tot):'0%'}</em></div>`};
  const un=dr.filter(t=>!catOf(t.category));
  $('#loanCats').innerHTML=cats().map(c=>card(c,dr.filter(t=>t.category===c.id),c.n,c.c)).join('')+(un.length?card(null,un,'ຍັງບໍ່ກຳນົດປະເພດ','#c9cfca'):'')+
-  `<div class="lcat tot"><small>ລວມທຸກປະເພດ</small><b>${bigK(tot)} <em>ກີບ</em></b><em>${dr.length} ຄັ້ງ</em></div>`;
+  `<div class="lcat tot"><small>ລວມທຸກປະເພດ</small><b>${fmt(tot/1e3)} <em>ພັນຢວນ</em></b><em>${dr.length} ຄັ້ງ</em></div>`;
  $('#tCats').innerHTML=`<thead><tr><th>ປະເພດ</th><th>ກວດກັບຍອດເກັບຊື້</th><th class="n">ໃຊ້ຢູ່</th><th></th></tr></thead><tbody>`+cats().map(c=>`<tr><td data-cn="${c.id}">${catTag(c.id)}</td><td><label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" data-ct="${c.id}"${c.track?' checked':''}> ແມ່ນ</label></td><td class="n">${LTX.filter(t=>t.category===c.id).length} ລາຍການ</td><td class="n"><button type="button" class="edb" data-ce="${c.id}">ແກ້ຊື່</button></td></tr>`).join('')+'</tbody>';
  document.querySelectorAll('#tCats [data-ct]').forEach(x=>x.onchange=()=>saveCats(cats().map(c=>c.id===x.dataset.ct?{...c,track:x.checked}:c),$('#catMsg')));
  document.querySelectorAll('#tCats [data-ce]').forEach(btn=>btn.onclick=()=>{const c=catOf(btn.dataset.ce);const td=document.querySelector(`#tCats [data-cn="${c.id}"]`);
@@ -675,34 +675,43 @@ $('#txType').addEventListener('change',e=>{$('#txCat').disabled=e.target.value!=
 $('#catForm').addEventListener('submit',async e=>{e.preventDefault();const n=$('#catNew').value.trim();if(!n)return;const used=cats().map(c=>c.c);const col=CATC.find(c=>!used.includes(c))||'#3a8f8a';
  if(await saveCats([...cats(),{id:'c'+Date.now().toString(36),n,c:col}],$('#catMsg'))){$('#catNew').value='';$('#catMsg').textContent='ເພີ່ມແລ້ວ: '+n}});
 /* loan use check: working-capital draws vs cassava purchases from the first draw onward */
+const USE_DAYS=7; // the latest draw gets 7 days to be spent on cassava before it is judged
 function renderLoanUse(){
  const [a,b]=rng();const L=LOANS.map(LN);const lc=no=>(L.find(l=>l.no===no)||{cur:'LAK'}).cur;const fs=facs();
+ const cny=t=>lc(t.loan_no)==='CNY'?+t.amount:toK(+t.amount,lc(t.loan_no))/FX;const m=v=>fmt(v/1e3);
  const tr=new Set(cats().filter(c=>c.track).map(c=>c.id));
  const wc=LTX.filter(t=>t.type==='draw'&&tr.has(t.category)&&t.date>=a&&t.date<=b).sort((x,y)=>x.date.localeCompare(y.date));
- const day={};PROC.filter(r=>fs.includes(r.factory)).forEach(r=>{day[r.date]=(day[r.date]||0)+(+r.amount||0)});
+ const day={};PROC.filter(r=>fs.includes(r.factory)).forEach(r=>{day[r.date]=(day[r.date]||0)+(+r.amount||0)/FX});
+ const dataEnd=Object.keys(day).sort().slice(-1)[0]||'';const today=isoOf(new Date());
  const sumP=(d0,d1)=>Object.entries(day).filter(([d])=>d>=d0&&d<=d1).reduce((s,[,v])=>s+v,0);
  const tonP=(d0,d1)=>PROC.filter(r=>fs.includes(r.factory)&&r.date>=d0&&r.date<=d1).reduce((s,r)=>s+(+r.net_kg||0),0)/1000;
- const m=v=>fmt(v/1e6);
- $('#useNote').textContent=`ນັບແຕ່ມື້ເບີກເງິນຄັ້ງທຳອິດ ໃນໄລຍະທີ່ເລືອກ · ຍອດເກັບຊື້: ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]} · ລ້ານກີບ`;
+ const add=(d,n)=>{const x=toDate(d);x.setDate(x.getDate()+n);return isoOf(x)};
+ $('#useNote').textContent=`ຍອດເກັບຊື້: ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]} · ຂໍ້ມູນເກັບຊື້ຮອດ ${isoD(dataEnd)} · ງວດລ່າສຸດ ມີເວລາໃຊ້ ${USE_DAYS} ມື້ · ພັນຢວນ`;
  if(!wc.length){$('#useK').innerHTML=`<div class="kpi"><div class="d">ບໍ່ມີການເບີກເງິນກູ້ ປະເພດທີ່ກວດກັບຍອດເກັບຊື້ ໃນ ${isoD(a)} – ${isoD(b)}</div></div>`;$('#useT').innerHTML='';$('#useCh').innerHTML='';return}
- const start=wc[0].date,wK=wc.reduce((s,t)=>s+toK(+t.amount,lc(t.loan_no)),0),pK=sumP(start,b),df=wK-pK;
- $('#useK').innerHTML=kpi('ເບີກທຶນໝູນວຽນ ຊື້ມັນ',m(wK),'ລ້ານກີບ',`${wc.length} ຄັ້ງ · ແຕ່ ${isoD(start)}`)+kpi(`ຍອດເກັບຊື້ມັນຕົ້ນ ${isoD(start).slice(0,5)} – ${isoD(b).slice(0,5)}`,m(pK),'ລ້ານກີບ',`${fmt(tonP(start,b),1)} ໂຕນ`)+
-  kpi('ສ່ວນຕ່າງ (ເບີກ − ເກັບຊື້)',(df>0?'+':'')+m(df),'ລ້ານກີບ',df>0?'ກວດວ່າເງິນສ່ວນເກີນ ຍັງຢູ່ໃນບັນຊີ ຫຼື ໃຊ້ຜິດເປົ້າໝາຍ':'ເງິນກູ້ທີ່ເບີກ ໃຊ້ເກັບຊື້ມັນໝົດ',df>0?['warn',`ເບີກເກີນຍອດເກັບຊື້ ${pct(df/wK)}`]:['good','ຍອດເກັບຊື້ ຄອບຄຸມເງິນກູ້']);
- const nxt=i=>wc[i+1]?wc[i+1].date:null;const pv=d=>{const x=toDate(d);x.setDate(x.getDate()-1);return isoOf(x)};
+ // each draw is matched with purchases until the next draw; the latest one with the next 7 days
+ const W=wc.map((t,i)=>{const end=wc[i+1]?add(wc[i+1].date,-1):add(t.date,USE_DAYS-1);const done=end<=dataEnd&&(wc[i+1]||end<today);const to=end<dataEnd?end:dataEnd;
+  return {t,end,done,w:cny(t),k:to>=t.date?sumP(t.date,to):0,to}});
+ const D=W.filter(x=>x.done),P=W.filter(x=>!x.done);const wK=D.reduce((s,x)=>s+x.w,0),pK=D.reduce((s,x)=>s+x.k,0),df=wK-pK;
+ const pend=P.length?`${P.length} ງວດ ${m(P.reduce((s,x)=>s+x.w,0))} ພັນຢວນ ຍັງບໍ່ນັບ (${P.map(x=>isoD(x.t.date).slice(0,5)).join(', ')}): ${P.some(x=>x.end>dataEnd)?`ລໍຖ້າຂໍ້ມູນເກັບຊື້ ຮອດ ${isoD(P[P.length-1].end).slice(0,5)}`:'ຍັງຢູ່ໃນໄລຍະໃຊ້ເງິນ'}`:'';
+ $('#useK').innerHTML=(D.length?kpi('ເບີກທຶນໝູນວຽນ ຊື້ມັນ (ງວດທີ່ຄົບກຳນົດ)',m(wK),'ພັນຢວນ',`${D.length} ງວດ · ${isoD(D[0].t.date)} – ${isoD(D[D.length-1].t.date)}`)+
+   kpi(`ຍອດເກັບຊື້ມັນຕົ້ນ ${isoD(D[0].t.date).slice(0,5)} – ${isoD(D[D.length-1].end).slice(0,5)}`,m(pK),'ພັນຢວນ',`${fmt(tonP(D[0].t.date,D[D.length-1].end),1)} ໂຕນ`)+
+   kpi('ສ່ວນຕ່າງ (ເບີກ − ເກັບຊື້)',(df>0?'+':'')+m(df),'ພັນຢວນ',df>0?'ກວດວ່າເງິນສ່ວນເກີນ ຍັງຢູ່ໃນບັນຊີ ຫຼື ໃຊ້ຜິດເປົ້າໝາຍ':'ເງິນກູ້ທີ່ເບີກ ໃຊ້ເກັບຊື້ມັນໝົດ',df>0?['warn',`ເບີກເກີນຍອດເກັບຊື້ ${pct(df/wK)}`]:['good','ຍອດເກັບຊື້ ຄອບຄຸມເງິນກູ້']):'')+
+  (P.length?kpi('ງວດທີ່ຍັງບໍ່ນັບ',m(P.reduce((s,x)=>s+x.w,0)),'ພັນຢວນ',pend.split(': ')[1]||'',['mute',P.map(x=>isoD(x.t.date).slice(0,5)).join(', ')]):'');
  $('#useT').innerHTML=`<thead><tr><th>ເບີກວັນທີ</th><th class="n">ເບີກ</th><th>ຊ່ວງເກັບຊື້</th><th class="n">ເກັບຊື້</th><th class="n">ສ່ວນຕ່າງ</th></tr></thead><tbody>`+
-  wc.map((t,i)=>{const e=nxt(i)?pv(nxt(i)):b;const w=toK(+t.amount,lc(t.loan_no)),k=sumP(t.date,e),x=w-k;return `<tr><td>${isoD(t.date)}</td><td class="n">${m(w)}</td><td class="src">${isoD(t.date).slice(0,5)} – ${isoD(e).slice(0,5)}</td><td class="n">${m(k)}</td><td class="n ${x>0?'neg':'pos'}">${x>0?'+':''}${m(x)}</td></tr>`}).join('')+
-  `<tr class="total"><td>ລວມ</td><td class="n">${m(wK)}</td><td></td><td class="n">${m(pK)}</td><td class="n ${df>0?'neg':'pos'}">${df>0?'+':''}${m(df)}</td></tr></tbody>`;
- // cumulative chart
- const days=[];for(let d=toDate(start);isoOf(d)<=b;d.setDate(d.getDate()+1))days.push(isoOf(d));
- let A=0,B=0;const sa=[],sb_=[];days.forEach(d=>{wc.filter(t=>t.date===d).forEach(t=>A+=toK(+t.amount,lc(t.loan_no)));B+=day[d]||0;sa.push(A/1e6);sb_.push(B/1e6)});
- const W=560,H=240,Pl=54,Pr=12,Pt=14,Pb=28,iw=W-Pl-Pr,ih=H-Pt-Pb,mx=Math.max(...sa,...sb_,1)*1.08,stp=niceStep(mx/5),top=Math.ceil(mx/stp)*stp;
- const x=i=>Pl+iw*i/Math.max(1,days.length-1),y=v=>Pt+ih-v/top*ih;let g=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="ເງິນກູ້ ທຽບກັບຍອດເກັບຊື້">`;
- for(let v=0;v<=top+1e-9;v+=stp)g+=`<line class="grid" x1="${Pl}" x2="${W-Pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${Pl-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;
- const lb=Math.max(1,Math.ceil(days.length/7));days.forEach((d,i)=>{if(i%lb===0||i===days.length-1)g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${isoD(d).slice(0,5)}</text>`});
- const pp=sb_.map((v,i)=>`${i?'L':'M'}${x(i)},${y(v)}`).join(''),pa=sa.map((v,i)=>i?`H${x(i)}V${y(v)}`:`M${x(0)},${y(v)}`).join('');
- g+=`<path d="${pp}V${y(0)}H${x(0)}Z" fill="var(--forest-2)" opacity=".1"/><path d="${pp}" fill="none" stroke="var(--forest-2)" stroke-width="2.4"/><path d="${pa}" fill="none" stroke="#2f5fb0" stroke-width="2.4"/>`;
- wc.forEach(t=>{const i=days.indexOf(t.date);if(i>=0)g+=`<circle cx="${x(i)}" cy="${y(sa[i])}" r="4" fill="#2f5fb0"/>`});
- const n=days.length-1;g+=`<text x="${x(n)-4}" y="${y(sa[n])-6}" text-anchor="end" style="fill:#2f5fb0;font-weight:700">${fmt(sa[n])}</text><text x="${x(n)-4}" y="${y(sb_[n])+15}" text-anchor="end" style="fill:var(--forest-2);font-weight:700">${fmt(sb_[n])}</text></svg>`;
+  W.map(x=>{const d=x.w-x.k;return `<tr><td>${isoD(x.t.date)}</td><td class="n">${m(x.w)}</td><td class="src">${isoD(x.t.date).slice(0,5)} – ${isoD(x.end).slice(0,5)}${x.done?'':`<br><span class="pill mute">${x.end>dataEnd?`ຂໍ້ມູນຮອດ ${isoD(dataEnd).slice(0,5)}`:'ກຳລັງໃຊ້'}</span>`}</td><td class="n">${m(x.k)}</td><td class="n ${x.done?(d>0?'neg':'pos'):'src'}">${x.done?(d>0?'+':'')+m(d):'ຍັງບໍ່ນັບ'}</td></tr>`}).join('')+
+  (D.length?`<tr class="total"><td>ລວມ (ຄົບກຳນົດ)</td><td class="n">${m(wK)}</td><td></td><td class="n">${m(pK)}</td><td class="n ${df>0?'neg':'pos'}">${df>0?'+':''}${m(df)}</td></tr>`:'')+'</tbody>';
+ // cumulative chart; the purchase line stops where the purchase data ends
+ const start=wc[0].date,last=W[W.length-1].end,endC=last>b?last:b;const days=[];for(let d=toDate(start);isoOf(d)<=endC;d.setDate(d.getDate()+1))days.push(isoOf(d));
+ let A=0,B=0;const sa=[],sb_=[];days.forEach(d=>{wc.filter(t=>t.date===d).forEach(t=>A+=cny(t));B+=day[d]||0;sa.push(A/1e3);sb_.push(d<=dataEnd?B/1e3:null)});
+ const Wd=560,H=240,Pl=54,Pr=12,Pt=14,Pb=28,iw=Wd-Pl-Pr,ih=H-Pt-Pb,mx=Math.max(...sa,...sb_.filter(v=>v!=null),1)*1.08,stp=niceStep(mx/5),top=Math.ceil(mx/stp)*stp;
+ const x=i=>Pl+iw*i/Math.max(1,days.length-1),y=v=>Pt+ih-v/top*ih;let g=`<svg class="chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="ເງິນກູ້ ທຽບກັບຍອດເກັບຊື້">`;
+ for(let v=0;v<=top+1e-9;v+=stp)g+=`<line class="grid" x1="${Pl}" x2="${Wd-Pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${Pl-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;
+ const lb=Math.max(1,Math.ceil(days.length/7));days.forEach((d,i)=>{if((i%lb===0&&days.length-1-i>=lb*.6)||i===days.length-1)g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${isoD(d).slice(0,5)}</text>`});
+ const ie=days.indexOf(dataEnd);if(ie>=0&&ie<days.length-1)g+=`<line x1="${x(ie)}" x2="${x(ie)}" y1="${Pt}" y2="${y(0)}" stroke="var(--ink-3)" stroke-dasharray="4 4"/><text x="${x(ie)+4}" y="${Pt+10}" style="font-size:10.5px">ຂໍ້ມູນເກັບຊື້ຮອດ ${isoD(dataEnd).slice(0,5)}</text>`;
+ const pts=sb_.map((v,i)=>v==null?null:[x(i),y(v)]).filter(Boolean),pp=pts.map((q,i)=>`${i?'L':'M'}${q[0]},${q[1]}`).join(''),pa=sa.map((v,i)=>i?`H${x(i)}V${y(v)}`:`M${x(0)},${y(v)}`).join('');
+ if(pts.length)g+=`<path d="${pp}V${y(0)}H${pts[0][0]}Z" fill="var(--forest-2)" opacity=".1"/><path d="${pp}" fill="none" stroke="var(--forest-2)" stroke-width="2.4"/>`;
+ g+=`<path d="${pa}" fill="none" stroke="#2f5fb0" stroke-width="2.4"/>`;wc.forEach(t=>{const i=days.indexOf(t.date);if(i>=0)g+=`<circle cx="${x(i)}" cy="${y(sa[i])}" r="4" fill="#2f5fb0"/>`});
+ const n=days.length-1,lp=pts[pts.length-1];g+=`<text x="${x(n)-4}" y="${y(sa[n])-6}" text-anchor="end" style="fill:#2f5fb0;font-weight:700">${fmt(sa[n])}</text>`+(lp?`<text x="${lp[0]-4}" y="${lp[1]+15}" text-anchor="end" style="fill:var(--forest-2);font-weight:700">${fmt(sb_[sb_.length-1]??sb_.filter(v=>v!=null).slice(-1)[0])}</text>`:'')+'</svg>';
  $('#useCh').innerHTML=g}
 /* edit / delete a loan transaction (fix typing mistakes); loan balances are corrected by reversing the old entry and applying the new one */
 let EDTX=null;
