@@ -665,8 +665,7 @@ function renderCats(){
  const un=dr.filter(t=>!catOf(t.category));
  $('#loanCats').innerHTML=cats().map(c=>card(c,dr.filter(t=>t.category===c.id),c.n,c.c)).join('')+(un.length?card(null,un,'ຍັງບໍ່ກຳນົດປະເພດ','#c9cfca'):'')+
   `<div class="lcat tot"><small>ລວມທຸກປະເພດ</small><b>${fmt(tot/1e3)} <em>ພັນຢວນ</em></b><em>${dr.length} ຄັ້ງ</em></div>`;
- $('#tCats').innerHTML=`<thead><tr><th>ປະເພດ</th><th>ກວດກັບຍອດເກັບຊື້</th><th class="n">ໃຊ້ຢູ່</th><th></th></tr></thead><tbody>`+cats().map(c=>`<tr><td data-cn="${c.id}">${catTag(c.id)}</td><td><label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" data-ct="${c.id}"${c.track?' checked':''}> ແມ່ນ</label></td><td class="n">${LTX.filter(t=>t.category===c.id).length} ລາຍການ</td><td class="n"><button type="button" class="edb" data-ce="${c.id}">ແກ້ຊື່</button></td></tr>`).join('')+'</tbody>';
- document.querySelectorAll('#tCats [data-ct]').forEach(x=>x.onchange=()=>saveCats(cats().map(c=>c.id===x.dataset.ct?{...c,track:x.checked}:c),$('#catMsg')));
+ $('#tCats').innerHTML=`<thead><tr><th>ປະເພດ</th><th>ກວດກັບຍອດເກັບຊື້</th><th class="n">ໃຊ້ຢູ່</th><th></th></tr></thead><tbody>`+cats().map(c=>`<tr><td data-cn="${c.id}">${catTag(c.id)}</td><td>${c.id==='wc'?'<span class="pill good">ແມ່ນ</span>':'—'}</td><td class="n">${LTX.filter(t=>t.category===c.id).length} ລາຍການ</td><td class="n"><button type="button" class="edb" data-ce="${c.id}">ແກ້ຊື່</button></td></tr>`).join('')+'</tbody>';
  document.querySelectorAll('#tCats [data-ce]').forEach(btn=>btn.onclick=()=>{const c=catOf(btn.dataset.ce);const td=document.querySelector(`#tCats [data-cn="${c.id}"]`);
   if(btn.dataset.ed){const v=td.querySelector('input').value.trim();if(v)saveCats(cats().map(x=>x.id===c.id?{...x,n:v}:x),$('#catMsg'));return}
   td.innerHTML=`<input type="text" maxlength="40" value="${esc(c.n)}" aria-label="ຊື່ປະເພດ" style="border:1px solid var(--line);border-radius:8px;padding:5px 8px;width:100%">`;td.querySelector('input').focus();btn.dataset.ed=1;btn.textContent='ບັນທຶກ'});
@@ -679,14 +678,14 @@ const USE_DAYS=7; // the latest draw gets 7 days to be spent on cassava before i
 function renderLoanUse(){
  const [a,b]=rng();const L=LOANS.map(LN);const lc=no=>(L.find(l=>l.no===no)||{cur:'LAK'}).cur;const fs=facs();
  const cny=t=>lc(t.loan_no)==='CNY'?+t.amount:toK(+t.amount,lc(t.loan_no))/FX;const m=v=>fmt(v/1e3);
- const tr=new Set(cats().filter(c=>c.track).map(c=>c.id));
+ const tr=new Set(['wc']); // only 'working capital for cassava' is checked against purchases
  const wc=LTX.filter(t=>t.type==='draw'&&tr.has(t.category)&&t.date>=a&&t.date<=b).sort((x,y)=>x.date.localeCompare(y.date));
  const day={};PROC.filter(r=>fs.includes(r.factory)).forEach(r=>{day[r.date]=(day[r.date]||0)+(+r.amount||0)/FX});
  const dataEnd=Object.keys(day).sort().slice(-1)[0]||'';const today=isoOf(new Date());
  const sumP=(d0,d1)=>Object.entries(day).filter(([d])=>d>=d0&&d<=d1).reduce((s,[,v])=>s+v,0);
  const tonP=(d0,d1)=>PROC.filter(r=>fs.includes(r.factory)&&r.date>=d0&&r.date<=d1).reduce((s,r)=>s+(+r.net_kg||0),0)/1000;
  const add=(d,n)=>{const x=toDate(d);x.setDate(x.getDate()+n);return isoOf(x)};
- $('#useNote').textContent=`ປະເພດທີ່ກວດ: ${cats().filter(c=>c.track).map(c=>c.n).join(', ')||'—'} · ຍອດເກັບຊື້: ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]} · ຂໍ້ມູນເກັບຊື້ຮອດ ${isoD(dataEnd)} · ງວດລ່າສຸດ ມີເວລາໃຊ້ ${USE_DAYS} ມື້ · ພັນຢວນ`;
+ $('#useNote').textContent=`ປະເພດທີ່ກວດ: ${(catOf('wc')||{n:'ທຶນໝູນວຽນ ຊື້ມັນຕົ້ນ'}).n} · ຍອດເກັບຊື້: ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]} · ຂໍ້ມູນເກັບຊື້ຮອດ ${isoD(dataEnd)} · ງວດລ່າສຸດ ມີເວລາໃຊ້ ${USE_DAYS} ມື້ · ພັນຢວນ`;
  if(!wc.length){$('#useK').innerHTML=`<div class="kpi"><div class="d">ບໍ່ມີການເບີກເງິນກູ້ ປະເພດທີ່ກວດກັບຍອດເກັບຊື້ ໃນ ${isoD(a)} – ${isoD(b)}</div></div>`;$('#useT').innerHTML='';$('#useCh').innerHTML='';return}
  // each draw is matched with purchases until the next draw; the latest one with the next 7 days
  const W=wc.map((t,i)=>{const end=wc[i+1]?add(wc[i+1].date,-1):add(t.date,USE_DAYS-1);const done=end<=dataEnd&&(wc[i+1]||end<today);const to=end<dataEnd?end:dataEnd;
