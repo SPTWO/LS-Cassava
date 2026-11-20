@@ -548,6 +548,14 @@ body{background:#f5f7f4}main{font-size:14.5px}
 .cft tr.net td{font-weight:700;border-top:1.5px solid var(--ink-3)}
 .cft tr.click{cursor:pointer}.cft tr.click:hover td,.cft tr.on td{background:var(--warn-bg)}
 .cft tr.big td{font-weight:800;background:var(--surface-2)}
+.ldt td,.ldt th{white-space:nowrap}
+.ldt tr.draw td{background:rgb(47 95 176 / .14)}.ldt tr.draw td b.dr{color:#2f5fb0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ldt tr.draw td b.dr{color:#8fb4ff}}
+:root[data-theme="dark"] .ldt tr.draw td b.dr{color:#8fb4ff}
+.ldt tr.deficit td.g{background:var(--warn-bg)}
+.ldt th.gi{color:var(--good)}.ldt th.go{color:#b85a1c}
+.ldw{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+.ldw th{position:sticky;top:0;background:var(--surface);z-index:1}
 .prd{display:flex;flex-wrap:wrap;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:4px 6px}
 .prd button{border:0;border-radius:7px;padding:5px 10px;font-weight:600;font-size:12.5px;background:transparent;color:var(--ink-2)}
 .prd button[aria-pressed=true]{background:var(--forest-2);color:#fff}
@@ -961,6 +969,20 @@ button,a,select{cursor:pointer}
   <!-- CASH FLOW -->
   <section class="view" id="v-cash" hidden>
     <div class="kpis hero" id="kCash"></div>
+    <div class="panel">
+      <header><h2>ງວດທີ່ທະນາຄານປ່ອຍເງິນກູ້</h2><p id="ldNote"></p></header>
+      <div class="tbl"><table id="tLoanDr" class="ldt"></table></div>
+    </div>
+    <div class="panel">
+      <header><h2>ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍເດືອນ</h2><p>ເປັນຫຍັງຕ້ອງເບີກເງິນກູ້ເພີ່ມ · ພັນຢວນ</p></header>
+      <div class="kpis" id="kLoanUse"></div>
+      <div class="tbl" style="margin-top:12px"><table id="tLoanM" class="ldt"></table></div>
+    </div>
+    <div class="panel">
+      <header><h2>ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍວັນ</h2><p>ແຖວສີຟ້າ = ມື້ທີ່ທະນາຄານປ່ອຍເງິນກູ້ · ຊ່ອງສີສົ້ມ = ມື້ທີ່ເງິນອອກຫຼາຍກວ່າເງິນເຂົ້າ</p></header>
+      <label class="src" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="ldHide" checked> ເຊື່ອງມື້ທີ່ບໍ່ມີລາຍການ</label>
+      <div class="ldw" style="margin-top:10px"><table id="tLoanD" class="ldt"></table></div>
+    </div>
     <div class="panel">
       <header><h2>ງົບກະແສເງິນສົດ</h2><p id="cfNote"></p></header>
       <div class="debt-fx"><span class="src">ອັດຕາແລກປ່ຽນ (ກີບ ຕໍ່ 1 ໜ່ວຍ):</span><label for="cfC">CNY</label><input type="number" id="cfC" min="1" step="1"><label for="cfU">USD</label><input type="number" id="cfU" min="1" step="1"><label for="cfT">THB</label><input type="number" id="cfT" min="1" step="1"><span class="src">ໜ່ວຍ: ພັນຢວນ (ທຽບເທົ່າ)</span></div>

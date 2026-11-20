@@ -748,8 +748,10 @@ function cfGrp(r){const a=String(r.activity||'').toUpperCase(),k=String(r.code||
  if(/Construction|Asset/i.test(k))return['inv','capex'];if(/Cassava/i.test(k))return['op','cassava'];if(/Salary|Staff Food|Canteen|Insurance|Perdiem/i.test(k))return['op','staff'];
  if(/Coal|Electricity|Fuel/i.test(k))return['op','energy'];if(/Transportation|Labour up-down/i.test(k))return['op','transport'];if(/Sparepart|Repair/i.test(k))return['op','maint'];
  if(/Bag|Packing|Factory supply/i.test(k))return['op','pack'];if(k==='Transfer')return['op','petty'];return['op','admin']}
+$('#ldHide').addEventListener('change',()=>renderCash());
 ['#cfC','#cfU','#cfT'].forEach(id=>$(id).addEventListener('input',()=>{CF[id==='#cfC'?'c':id==='#cfU'?'u':'t']=+$(id).value||null;renderCash()}));
 function renderCash(){
+ ['#tLoanDr','#kLoanUse','#tLoanM','#tLoanD'].forEach(x=>$(x).innerHTML='');
  if(BANK_ERR){$('#kCash').innerHTML='';$('#tCash').innerHTML=`<tbody><tr><td class="issue">ຍັງບໍ່ມີຕາຕະລາງ bank_txns ໃນຖານຂໍ້ມູນ. ແລ່ນໄຟລ໌ supabase/migrate_2026_11_cashflow.sql ໃນ Supabase SQL Editor ກ່ອນ, ແລ້ວນຳເຂົ້າໄຟລ໌ 04 ຄືນ.</td></tr></tbody>`;return}
  if(!BANK.length){$('#kCash').innerHTML='';$('#tCash').innerHTML='<tbody><tr><td class="issue">ຍັງບໍ່ມີຂໍ້ມູນ. ນຳເຂົ້າໄຟລ໌ 04 ທີ່ມີ Sheet Banking_Daily.</td></tr></tbody>';['#chCash','#tCashBal','#tCashDet'].forEach(x=>$(x).innerHTML='');return}
  const C=CF.c||FX,U=CF.u||(SET.fx_other&&+SET.fx_other.usd)||22000,T=CF.t||(SET.fx_other&&+SET.fx_other.thb)||680;$('#cfC').value=C;$('#cfU').value=U;$('#cfT').value=T;
@@ -781,6 +783,29 @@ function renderCash(){
  let g=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="ເງິນເຂົ້າ ເງິນອອກ ແລະ ຍອດເງິນສົດ">`;for(let v=0;v<=top+1e-9;v+=stp)g+=`<line class="grid" x1="${Pl}" x2="${W-Pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${Pl-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;
  months.forEach((mo,i)=>{g+=`<rect x="${x(i)-bw-1}" y="${y(ins[i])}" width="${bw}" height="${y(0)-y(ins[i])}" rx="3" fill="var(--forest-2)"/><rect x="${x(i)+1}" y="${y(outs[i])}" width="${bw}" height="${y(0)-y(outs[i])}" rx="3" fill="#d9822b"/><text x="${x(i)}" y="${H-8}" text-anchor="middle">${(M[mi(toDate(mo+'-01'))]||mo).split(' ')[0]}</text>`});
  g+=`<path d="${cl.map((v,i)=>`${i?'L':'M'}${x(i)},${y(v)}`).join('')}" fill="none" stroke="#2f5fb0" stroke-width="2.4"/>`+cl.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="#2f5fb0"/>`).join('')+'</svg>';$('#chCash').innerHTML=g;
+ // loan disbursements and what the money was used for (monthly + daily)
+ {const LG=r=>{const [sec,key]=cfGrp(r);return key==='draw'?'loan':key==='in_starch'?'sale':key==='in_dep'?'dep':key==='cassava'?'cass':(key==='repay'||key==='interest')?'debt':'other'};
+  const COLS=[['loan','ເງິນກູ້ທີ່ລົງ','gi'],['sale','ເງິນຂາຍແປ້ງ','gi'],['dep','ເງິນມັດຈຳ','gi'],['cass','ຊື້ມັນຕົ້ນ','go'],['debt','ຊຳລະໜີ້ ແລະ ດອກເບ້ຍ','go'],['other','ລາຍຈ່າຍອື່ນ (ຜະລິດ, ລົງທຶນ, ອື່ນໆ)','go']];
+  const fsF=st.f==='all'?['xan','nan']:[st.f];const PRd={},EXd={};PROD.filter(r=>fsF.includes(r.factory)).forEach(r=>{PRd[r.date]=(PRd[r.date]||0)+(+r.output_kg||0)/1000});
+  MOVES.filter(r=>fsF.includes(r.factory)&&r.kind==='starch'&&r.direction==='out'&&!/reprocess/i.test(r.buyer_type||'')).forEach(r=>{EXd[r.date]=(EXd[r.date]||0)+(+r.weight_kg||0)/1000});
+  const dg={};rs.forEach(r=>{const g=dg[r.date]=dg[r.date]||{};const c=LG(r);g[c]=(g[c]||0)+val(r)});
+  const kk=v=>Math.abs(v)<50?'—':(v<0?'−':'')+fmt(Math.abs(v)/1e3,1);
+  const days=[];for(let d=toDate(a);isoOf(d)<=b;d.setDate(d.getDate()+1))days.push(isoOf(d));
+  let bl=open;const rows=days.map(d=>{const g=dg[d]||{},nt=COLS.reduce((s2,[c])=>s2+(g[c]||0),0);bl+=nt;return{d,g,nt,bl,pr:PRd[d]||0,ex:EXd[d]||0}});
+  const T={};COLS.forEach(([c])=>T[c]=rows.reduce((s2,r)=>s2+(r.g[c]||0),0));const outs=T.cass+T.debt+T.other,pc=v=>outs<0?pct(v/outs):'—';
+  $('#ldNote').textContent=`ຈາກ Banking (BANK LOAN-INCREASE) · ${isoD(a)} – ${isoD(b)} · ພັນຢວນ`;
+  let run=0;const dr=rows.filter(r=>Math.abs(r.g.loan||0)>=50);
+  $('#tLoanDr').innerHTML=dr.length?`<thead><tr><th>ງວດ</th><th>ວັນທີທະນາຄານປ່ອຍ</th><th class="n">ຈຳນວນ (ພັນຢວນ)</th><th class="n">ສະສົມ</th></tr></thead><tbody>`+dr.map((r,i)=>{run+=r.g.loan;return `<tr class="draw"><td>${i+1}</td><td><b class="dr">${isoD(r.d)}</b></td><td class="n"><b class="dr">+${kk(r.g.loan)}</b></td><td class="n">${kk(run)}</td></tr>`}).join('')+`<tr class="total"><td colspan="2">ລວມ</td><td class="n">${kk(run)}</td><td></td></tr></tbody>`:'<tbody><tr><td class="src">ບໍ່ມີການປ່ອຍເງິນກູ້ ໃນຊ່ວງວັນທີນີ້</td></tr></tbody>';
+  $('#kLoanUse').innerHTML=kpi('ເງິນເຂົ້າ: ເງິນກູ້ / ຂາຍແປ້ງ / ມັດຈຳ',kk(T.loan+T.sale+T.dep),'ພັນຢວນ',`${kk(T.loan)} / ${kk(T.sale)} / ${kk(T.dep)}`)+kpi('ເງິນອອກ',kk(outs),'ພັນຢວນ',`ຊື້ມັນ ${kk(T.cass)} · ຊຳລະໜີ້ ${kk(T.debt)} · ອື່ນ ${kk(T.other)}`)+
+   kpi('ສັດສ່ວນເງິນອອກ',`ຊຳລະໜີ້ ${pc(T.debt)}`,'',`ຊື້ມັນ ${pc(T.cass)} · ລາຍຈ່າຍອື່ນ ${pc(T.other)}`)+kpi(`ເງິນສົດ ${isoD(a).slice(0,5)} → ${isoD(b).slice(0,5)}`,`${kk(open)} → ${kk(bl)}`,'ພັນຢວນ',bl<open?`ຫຼຸດລົງ ${kk(open-bl)}`:`ເພີ່ມຂຶ້ນ ${kk(bl-open)}`);
+  const hd=lab=>`<thead><tr><th>${lab}</th>${COLS.map(([,n,cl])=>`<th class="n ${cl}">${n}</th>`).join('')}<th class="n">ຂາດ / ເກີນ</th><th class="n">ຍອດເງິນສົດ</th><th class="n">ຜະລິດ (ໂຕນ)</th><th class="n">ສົ່ງອອກ (ໂຕນ)</th></tr></thead>`;
+  const cellv=(c,v)=>c==='loan'&&Math.abs(v)>=50?`<b class="dr">+${kk(v)}</b>`:kk(v);
+  const ms=[...new Set(rows.map(r=>r.d.slice(0,7)))];
+  $('#tLoanM').innerHTML=hd('ເດືອນ')+'<tbody>'+ms.map(mo=>{const R2=rows.filter(r=>r.d.slice(0,7)===mo);const sm=c=>R2.reduce((x,r)=>x+(r.g[c]||0),0);const nt=R2.reduce((x,r)=>x+r.nt,0);
+   return `<tr class="${nt<-50?'deficit':''}"><td><b>${M[mi(toDate(mo+'-01'))]||mo}</b></td>${COLS.map(([c])=>`<td class="n">${cellv(c,sm(c))}</td>`).join('')}<td class="n g ${nt<0?'neg':'pos'}"><b>${kk(nt)}</b></td><td class="n">${kk(R2[R2.length-1].bl)}</td><td class="n">${fmt(R2.reduce((x,r)=>x+r.pr,0),1)}</td><td class="n">${fmt(R2.reduce((x,r)=>x+r.ex,0),1)}</td></tr>`}).join('')+
+   `<tr class="total"><td>ລວມ</td>${COLS.map(([c])=>`<td class="n">${kk(T[c])}</td>`).join('')}<td class="n">${kk(bl-open)}</td><td class="n">${kk(bl)}</td><td class="n">${fmt(rows.reduce((x,r)=>x+r.pr,0),1)}</td><td class="n">${fmt(rows.reduce((x,r)=>x+r.ex,0),1)}</td></tr></tbody>`;
+  const hide=$('#ldHide').checked;
+  $('#tLoanD').innerHTML=hd('ວັນທີ')+'<tbody>'+rows.filter(r=>!hide||Object.keys(r.g).length||r.pr||r.ex).map(r=>`<tr class="${Math.abs(r.g.loan||0)>=50?'draw ':''}${r.nt<-50?'deficit':''}"><td>${isoD(r.d).slice(0,5)}</td>${COLS.map(([c])=>`<td class="n">${cellv(c,r.g[c]||0)}</td>`).join('')}<td class="n g ${r.nt<0?'neg':'pos'}">${kk(r.nt)}</td><td class="n">${kk(r.bl)}</td><td class="n">${r.pr?fmt(r.pr,1):'—'}</td><td class="n">${r.ex?fmt(r.ex,1):'—'}</td></tr>`).join('')+'</tbody>'}
  // balances by account
  const keys=[...new Set(AR.map(r=>r.account+'|'+r.currency))].sort();let tk=0;$('#cbNote').textContent='ຍອດ ຮອດ '+isoD(b);
  const bl=keys.map(k=>{const [ac,cu]=k.split('|');const v=AR.filter(r=>r.account===ac&&r.currency===cu).reduce((s,r)=>s+(+r.opening||0)+(r.date&&r.date<=b?(+r.amt_in||0)-(+r.amt_out||0):0),0);return [ac,cu,v]}).filter(x=>Math.abs(x[2])>=5);
