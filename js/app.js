@@ -738,11 +738,13 @@ $('#txDel').addEventListener('click',async()=>{const t=EDTX;if(!t)return;const b
   LTX=await fetchAll('loan_txns');closeTxEdit();renderDebt();toast('ລົບລາຍການແລ້ວ')}catch(err){$('#txEdMsg').textContent='ລົບບໍ່ສຳເລັດ: '+(err.message||err)}});
 /* ===== Cash flow (Banking_Daily) — thousand CNY equivalent ===== */
 const CF={sel:null,u:null,t:null,c:null};
-const CF_LBL={in_starch:'ຂາຍແປ້ງ (ລວມເງິນມັດຈຳ)',in_pulp:'ຂາຍກາກມັນ',in_other:'ລາຍຮັບອື່ນ',cassava:'ຊື້ມັນຕົ້ນ ແລະ ຄ່ານາຍໜ້າ',staff:'ເງິນເດືອນ, ອາຫານ ແລະ ສະຫວັດດີການ',energy:'ຖ່ານຫີນ, ໄຟຟ້າ ແລະ ນ້ຳມັນ',transport:'ຂົນສົ່ງ ແລະ ແຮງງານຂົນຍ້າຍ',maint:'ສ້ອມແປງ ແລະ ອາໄຫຼ່',pack:'ຖົງ ແລະ ອຸປະກອນບັນຈຸ',petty:'ໂອນເຂົ້າເງິນສົດຍ່ອຍ / ເງິນສຳຮອງ',admin:'ບໍລິຫານ, ຄ່າທຳນຽມ ແລະ ອື່ນໆ',capex:'ກໍ່ສ້າງ ແລະ ຊື້ຊັບສິນ',draw:'ເບີກເງິນກູ້',repay:'ຊຳລະຕົ້ນທຶນເງິນກູ້',interest:'ຊຳລະດອກເບ້ຍ',x:'ໂອນ ແລະ ແລກປ່ຽນ ລະຫວ່າງບັນຊີ (ສຸດທິ)'};
-const CF_ORD={op:['in_starch','in_pulp','in_other','cassava','staff','energy','transport','maint','pack','petty','admin'],inv:['capex'],fin:['draw','repay','interest'],int:['x']};
-function cfGrp(r){const a=String(r.activity||'').toUpperCase(),k=String(r.code||'');
+const CF_LBL={in_starch:'ຂາຍແປ້ງ (ຕາມໃບແຈ້ງໜີ້)',in_dep:'ເງິນມັດຈຳ ຈາກລູກຄ້າ',in_pulp:'ຂາຍກາກມັນ',in_other:'ລາຍຮັບອື່ນ',cassava:'ຊື້ມັນຕົ້ນ ແລະ ຄ່ານາຍໜ້າ',staff:'ເງິນເດືອນ, ອາຫານ ແລະ ສະຫວັດດີການ',energy:'ຖ່ານຫີນ, ໄຟຟ້າ ແລະ ນ້ຳມັນ',transport:'ຂົນສົ່ງ ແລະ ແຮງງານຂົນຍ້າຍ',maint:'ສ້ອມແປງ ແລະ ອາໄຫຼ່',pack:'ຖົງ ແລະ ອຸປະກອນບັນຈຸ',petty:'ໂອນເຂົ້າເງິນສົດຍ່ອຍ / ເງິນສຳຮອງ',admin:'ບໍລິຫານ, ຄ່າທຳນຽມ ແລະ ອື່ນໆ',capex:'ກໍ່ສ້າງ ແລະ ຊື້ຊັບສິນ',draw:'ເບີກເງິນກູ້',repay:'ຊຳລະຕົ້ນທຶນເງິນກູ້',interest:'ຊຳລະດອກເບ້ຍ',x:'ໂອນ ແລະ ແລກປ່ຽນ ລະຫວ່າງບັນຊີ (ສຸດທິ)'};
+const CF_ORD={op:['in_starch','in_dep','in_pulp','in_other','cassava','staff','energy','transport','maint','pack','petty','admin'],inv:['capex'],fin:['draw','repay','interest'],int:['x']};
+function cfGrp(r){const a=String(r.activity||'').toUpperCase(),k=String(r.code||''),ds=String(r.descr||'');
  if(a==='ACC TO ACC'||a==='EXCHANGE')return['int','x'];if(a.startsWith('BANK LOAN-INCREASE'))return['fin','draw'];if(a.startsWith('BANK LOAN-DECREASE'))return['fin','repay'];if(/^Interest Loan/i.test(k))return['fin','interest'];
- if(a==='REVENUE')return /Residue/i.test(k)?['op','in_pulp']:/Topioca|Tapioca/i.test(k)?['op','in_starch']:['op','in_other'];
+ // customer deposits vs payment of invoices: read from the description (invoice receipts also mention the 20% deposit deduction)
+ if(a==='REVENUE')return /Residue/i.test(k)?['op','in_pulp']:/Topioca|Tapioca/i.test(k)?(/ມັດຈຳ|ໝັດຈຳ/.test(ds)&&!/INV-|INVOICE|ລາຍຮັບ ແປ້ງ|ລາຍຮັບ-ຂາຍ|ຄ່າແປ້ງ/i.test(ds)?['op','in_dep']:['op','in_starch']):['op','in_other'];
+ if(/ຄ່າ\s*ກະແສໄຟຟ້າ|ຄ່າໄຟຟ້າ/.test(ds))return['op','energy']; // electricity bills booked under an asset code
  if(/Construction|Asset/i.test(k))return['inv','capex'];if(/Cassava/i.test(k))return['op','cassava'];if(/Salary|Staff Food|Canteen|Insurance|Perdiem/i.test(k))return['op','staff'];
  if(/Coal|Electricity|Fuel/i.test(k))return['op','energy'];if(/Transportation|Labour up-down/i.test(k))return['op','transport'];if(/Sparepart|Repair/i.test(k))return['op','maint'];
  if(/Bag|Packing|Factory supply/i.test(k))return['op','pack'];if(k==='Transfer')return['op','petty'];return['op','admin']}
@@ -760,7 +762,7 @@ function renderCash(){
  const months=[];{let d=toDate(a.slice(0,7)+'-01');while(isoOf(d).slice(0,7)<=b.slice(0,7)){months.push(isoOf(d).slice(0,7));d.setMonth(d.getMonth()+1)}}
  const G=rs.map(r=>[r,cfGrp(r)]);const S=(mo,sec,key)=>G.filter(([r,g])=>(!mo||r.date.slice(0,7)===mo)&&g[0]===sec&&(!key||g[1]===key)).reduce((t,[r])=>t+val(r),0);
  const open=balAt(prev(a)),close=balAt(b),opIn=G.filter(([,g])=>g[0]==='op'&&g[1].startsWith('in_')).reduce((t,[r])=>t+val(r),0),opNet=S(null,'op'),net=['op','inv','fin','int'].reduce((t,x)=>t+S(null,x),0);
- $('#kCash').innerHTML=kpi(`ເງິນສົດ ຕົ້ນງວດ (${isoD(a)})`,m(open),'ພັນຢວນ','ທຸກບັນຊີ ທຽບເທົ່າຢວນ')+kpi('ເງິນເຂົ້າ ຈາກການດຳເນີນງານ',m(opIn),'ພັນຢວນ','ຂາຍແປ້ງ, ກາກມັນ ແລະ ອື່ນໆ')+kpi('ເງິນອອກ ຈາກການດຳເນີນງານ',m(opNet-opIn),'ພັນຢວນ','ຊື້ມັນຕົ້ນ, ເງິນເດືອນ, ພະລັງງານ …')+
+ $('#kCash').innerHTML=kpi(`ເງິນສົດ ຕົ້ນງວດ (${isoD(a)})`,m(open),'ພັນຢວນ','ທຸກບັນຊີ ທຽບເທົ່າຢວນ')+kpi('ເງິນເຂົ້າ ຈາກການດຳເນີນງານ',m(opIn),'ພັນຢວນ',`ຂາຍແປ້ງ ${m(S(null,'op','in_starch'))} · ມັດຈຳ ${m(S(null,'op','in_dep'))} · ກາກມັນ ${m(S(null,'op','in_pulp'))}`)+kpi('ເງິນອອກ ຈາກການດຳເນີນງານ',m(opNet-opIn),'ພັນຢວນ','ຊື້ມັນຕົ້ນ, ເງິນເດືອນ, ພະລັງງານ …')+
   kpi('ກະແສເງິນສົດ ສຸດທິ',(net>0?'+':'')+m(net),'ພັນຢວນ',`${isoD(a)} – ${isoD(b)}`,[net>=0?'good':'warn',net>=0?'ເງິນສົດ ເພີ່ມຂຶ້ນ':'ເງິນສົດ ຫຼຸດລົງ'])+kpi(`ເງິນສົດ ທ້າຍງວດ (${isoD(b)})`,m(close),'ພັນຢວນ',`ຂໍ້ມູນ Banking ຮອດ ${isoD(last)}`);
  $('#cfNote').textContent=`${isoD(a)} – ${isoD(b)} · ${rs.length} ລາຍການ · ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]}`;
  const n=months.length+2,line=(lbl,f,cls,key)=>{const tot=f(null);return `<tr class="${cls||''}${key?' click':''}${key&&key===CF.sel?' on':''}"${key?` data-k="${key}"`:''}><td>${lbl}</td>${months.map(mo=>{const v=f(mo);return `<td class="n${v<0?' neg':''}">${Math.abs(v)<500?'—':m(v)}</td>`}).join('')}<td class="n${tot<0?' neg':''}"><b>${Math.abs(tot)<500?'—':m(tot)}</b></td></tr>`};
