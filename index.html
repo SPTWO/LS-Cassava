@@ -550,8 +550,6 @@ body{background:#f5f7f4}main{font-size:14.5px}
 .cft tr.big td{font-weight:800;background:var(--surface-2)}
 .ldt td,.ldt th{white-space:nowrap}
 .ldt tr.draw td{background:rgb(47 95 176 / .14)}.ldt tr.draw td b.dr{color:#2f5fb0}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ldt tr.draw td b.dr{color:#8fb4ff}}
-:root[data-theme="dark"] .ldt tr.draw td b.dr{color:#8fb4ff}
 .ldt tr.deficit td.g{background:var(--warn-bg)}
 .ldt th.gi{color:var(--good)}.ldt th.go{color:#b85a1c}
 .ldw{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:12px}
@@ -969,10 +967,6 @@ button,a,select{cursor:pointer}
   <!-- CASH FLOW -->
   <section class="view" id="v-cash" hidden>
     <div class="kpis hero" id="kCash"></div>
-    <div class="panel">
-      <header><h2>ງວດທີ່ທະນາຄານປ່ອຍເງິນກູ້</h2><p id="ldNote"></p></header>
-      <div class="tbl"><table id="tLoanDr" class="ldt"></table></div>
-    </div>
     <div class="panel">
       <header><h2>ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍເດືອນ</h2><p>ເປັນຫຍັງຕ້ອງເບີກເງິນກູ້ເພີ່ມ · ພັນຢວນ</p></header>
       <div class="kpis" id="kLoanUse"></div>
