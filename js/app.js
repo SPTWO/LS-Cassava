@@ -721,9 +721,9 @@ $('#txEdForm').addEventListener('submit',async e=>{e.preventDefault();const t=ED
  if(!d){msg.textContent='ເລືອກວັນທີ';return}if(!(amt>0)){msg.textContent='ໃສ່ຈຳນວນເງິນ ຫຼາຍກວ່າ 0';return}
  const oldRow=LOANS.find(x=>x.loan_no===t.loan_no),newRow=LOANS.find(x=>x.loan_no===no);if(!oldRow||!newRow)return;
  const moneyChanged=no!==t.loan_no||ty!==t.type||amt!==+t.amount;msg.textContent='ກຳລັງບັນທຶກ …';
- try{const {error}=await sb.from('loan_txns').update({date:d,loan_no:no,type:ty,amount:amt,category:cat,note}).eq('id',t.id);if(error)throw error;
+ try{const {data:up,error}=await sb.from('loan_txns').update({date:d,loan_no:no,type:ty,amount:amt,category:cat,note}).eq('id',t.id).select();if(error)throw error;if(Array.isArray(up)&&!up.length)throw new Error('ຖານຂໍ້ມູນບໍ່ໄດ້ອັບເດດລາຍການ (ກວດສິດ admin)');if(Array.isArray(up)&&cat&&up[0].category!==cat)throw new Error('ບັນທຶກປະເພດບໍ່ໄດ້ · category');
   if(moneyChanged){txEffect(oldRow,t.type,+t.amount,-1);txEffect(newRow,ty,amt,1);await persistLoans([t.loan_no,no])}
-  LTX=await fetchAll('loan_txns');closeTxEdit();renderDebt();toast('ແກ້ໄຂລາຍການແລ້ວ')}catch(err){msg.textContent='ບັນທຶກບໍ່ສຳເລັດ: '+(err.message||err)+(String(err.message||'').includes('category')?' · ແລ່ນ SQL migrate_2026_11_cashflow.sql ກ່ອນ':'')}});
+  LTX=await fetchAll('loan_txns');closeTxEdit();renderDebt();toast('ແກ້ໄຂລາຍການແລ້ວ')}catch(err){msg.textContent='ບັນທຶກບໍ່ສຳເລັດ: '+(err.message||err)+(String(err.message||'').includes('category')?' · ແລ່ນ SQL ແລ້ວແລ່ນ: notify pgrst, \'reload schema\';':'')}});
 $('#txDel').addEventListener('click',async()=>{const t=EDTX;if(!t)return;const btn=$('#txDel');if(!btn.dataset.sure){btn.dataset.sure=1;btn.textContent='ກົດອີກຄັ້ງ ເພື່ອຢືນຢັນການລົບ';return}
  const row=LOANS.find(x=>x.loan_no===t.loan_no);$('#txEdMsg').textContent='ກຳລັງລົບ …';
  try{const {error}=await sb.from('loan_txns').delete().eq('id',t.id);if(error)throw error;if(row){txEffect(row,t.type,+t.amount,-1);await persistLoans([t.loan_no])}
