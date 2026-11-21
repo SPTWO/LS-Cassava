@@ -29,6 +29,16 @@
    anim(k,[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:250,delay:dl});
    k.querySelectorAll('.pill').forEach(p=>anim(p,[{opacity:0,transform:'scale(.85)'},{opacity:1,transform:'none'}],{duration:300,delay:dl+250}));
    const n=k.querySelector('.v');if(n)count(n,dl)}));
+  // overview: business-flow steps and plan-vs-actual rows
+  v.querySelectorAll('.flow').forEach(g=>[...g.querySelectorAll('.step')].forEach((k,i)=>{const dl=Math.min(i*60,300);
+   anim(k,[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:280,delay:dl});
+   k.querySelectorAll('.pill,.ratio').forEach(p=>anim(p,[{opacity:0,transform:'scale(.85)'},{opacity:1,transform:'none'}],{duration:300,delay:dl+250}));
+   const n=k.querySelector('.big');if(n)count(n,dl)}));
+  v.querySelectorAll('.pva-row').forEach((r,i)=>{const dl=100+i*70;anim(r,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:250,delay:dl});
+   r.querySelectorAll('.track .plan,.track .act').forEach((b,j)=>{b.style.transformOrigin='left center';anim(b,[{transform:'scaleX(0)'},{transform:'none'}],{duration:650,delay:dl+100+j*120})});
+   const t=r.querySelector('.track .tick');if(t)anim(t,[{opacity:0},{opacity:1}],{duration:250,delay:dl+600});
+   const n=r.querySelector('.val b.num');if(n)count(n,dl)});
+  v.querySelectorAll('.flow .bar i').forEach((b,i)=>{b.style.transformOrigin='left center';anim(b,[{transform:'scaleX(0)'},{transform:'none'}],{duration:600,delay:200+i*60})});
   v.querySelectorAll('.ab-t i,.mini i,.use i').forEach((b,i)=>{b.style.transformOrigin='left center';anim(b,[{transform:'scaleX(0)'},{transform:'none'}],{duration:600,delay:150+Math.min(i*30,300)})});
   v.querySelectorAll('svg.chart').forEach(chart);
   v.querySelectorAll('table tbody').forEach(tb=>[...tb.rows].slice(0,14).forEach((r,i)=>anim(r,[{opacity:0,transform:'translateX(-6px)'},{opacity:1,transform:'none'}],{duration:220,delay:120+i*25})))}
