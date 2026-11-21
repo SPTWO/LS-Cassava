@@ -554,6 +554,19 @@ body{background:#f5f7f4}main{font-size:14.5px}
 .ldt th.gi{color:var(--good)}.ldt th.go{color:#b85a1c}
 .ldw{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:12px}
 .ldw th{position:sticky;top:0;background:var(--surface);z-index:1}
+/* motion: hover / press / modal / toast (tab content is animated by js/motion.js) */
+.kpi{transition:transform .15s cubic-bezier(.2,0,0,1),box-shadow .15s cubic-bezier(.2,0,0,1)}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgb(16 40 24 / .05),0 12px 24px -12px rgb(16 40 24 / .22)}
+.btn,.prd button,#factorySeg button,.edb,.tabs a{transition:transform .12s cubic-bezier(.2,0,0,1),filter .15s,background-color .15s,color .15s}
+.btn:active,.prd button:active,#factorySeg button:active,.edb:active{transform:scale(.97)}
+.rep-modal:not([hidden]){animation:mvFade .25s cubic-bezier(.2,0,0,1)}
+.rep-modal:not([hidden]) .rep-box{animation:mvModal .32s cubic-bezier(.2,0,0,1)}
+@keyframes mvFade{from{opacity:0}to{opacity:1}}
+@keyframes mvModal{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+.toast{animation:mvToast .25s cubic-bezier(.2,0,0,1)}
+@keyframes mvToast{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+html.no-motion *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){.kpi,.btn,.prd button,#factorySeg button,.edb,.tabs a,.rep-modal,.rep-box,.toast{animation:none!important;transition:none!important}.kpi:hover{transform:none}}
 .prd{display:flex;flex-wrap:wrap;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:4px 6px}
 .prd button{border:0;border-radius:7px;padding:5px 10px;font-weight:600;font-size:12.5px;background:transparent;color:var(--ink-2)}
 .prd button[aria-pressed=true]{background:var(--forest-2);color:#fff}
@@ -1034,6 +1047,7 @@ button,a,select{cursor:pointer}
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
 <script src="js/cycle.js"></script>
+<script src="js/motion.js"></script>
 <script type="module" src="js/factory3d.js"></script>
 <script type="module" src="js/process3d.js"></script>
 </body>
