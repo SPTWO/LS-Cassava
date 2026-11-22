@@ -297,7 +297,7 @@ function build(site){clear();cur=site;const S=SITES[site];SITE=S.build();const D
  const sp=new THREE.BufferGeometry(),N=70;sp.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3),3));
  steam={pts:new THREE.Points(sp,new THREE.PointsMaterial({color:0xffffff,size:5,sizeAttenuation:false,transparent:true,opacity:.6,depthWrite:false})),N,age:Float32Array.from({length:N},()=>Math.random())};world.add(steam.pts);
  document.getElementById('siteProv').textContent=S.prov;const st=document.getElementById('siteStatus');st.textContent=D.status;st.className='pill3 '+(D.ok?'ok':'wait');
- document.getElementById('kpis').innerHTML=`<div><small>ມັນຕົ້ນຄ້າງລານ</small><strong>${fmt(D.raw,1)}</strong><em>ໂຕນ</em></div><div><small>ຜະລິດແປ້ງ ລະດູນີ້</small><strong>${fmt(D.prod,1)}</strong><em>ໂຕນ</em></div><div><small>ແປ້ງໃນສາງ</small><strong>${fmt(D.s25+D.s850,1)}</strong><em>ໂຕນ</em></div>`;
+ document.getElementById('kpis').innerHTML=`<div><small>ມັນຕົ້ນຄ້າງລານ</small><strong>${fmt(D.raw)}</strong><em>ໂຕນ</em></div><div><small>ຜະລິດແປ້ງ ລະດູນີ້</small><strong>${fmt(D.prod)}</strong><em>ໂຕນ</em></div><div><small>ແປ້ງໃນສາງ</small><strong>${fmt(D.s25+D.s850)}</strong><em>ໂຕນ</em></div>`;
  document.getElementById('locs').innerHTML=S.locs.map(([k,n,s],i)=>`<button class="loc" data-k="${k}"><b>${i+1}</b><span>${n}${s?`<small>${s}</small>`:''}</span></button>`).join('');
  document.querySelectorAll('.loc').forEach(b=>b.onclick=()=>focus(b.dataset.k));
  batchStatic();home(true)}
@@ -307,7 +307,7 @@ function setOpen(k){for(const key in BLD){const b=BLD[key],on=key===k&&(key==='f
 function det(h){document.getElementById('det').innerHTML=h}
 function home(instant){FK=null;setOpen(null);const h=SITES[cur].home;flyTo(h.pos,h.tgt,h.zoom);if(instant){cam.position.set(...h.pos);controls.target.set(...h.tgt);cam.zoom=h.zoom;cam.updateProjectionMatrix()}
  homeDet()}
-function homeDet(){const D=DATA[cur];det(`<h3>ໂຮງງານ ຜະລິດແປ້ງມັນຕົ້ນ ເມືອງ${D.name}</h3><p>ກົດຈຸດໃນລາຍການ ຫຼື ໃນແບບຈຳລອງ ເພື່ອເຂົ້າໄປເບິ່ງ.</p><div class="kv"><span>ເກັບຊື້ ລະດູນີ້</span><b>${fmt(D.proc)} ໂຕນ</b><span>ຜະລິດແປ້ງ</span><b>${fmt(D.prod,1)} ໂຕນ</b><span>ສົ່ງອອກ</span><b>${fmt(D.exp)} ໂຕນ</b><span>ອັບເດດ</span><b>${D.last}</b></div>`)}
+function homeDet(){const D=DATA[cur];det(`<h3>ໂຮງງານ ຜະລິດແປ້ງມັນຕົ້ນ ເມືອງ${D.name}</h3><p>ກົດຈຸດໃນລາຍການ ຫຼື ໃນແບບຈຳລອງ ເພື່ອເຂົ້າໄປເບິ່ງ.</p><div class="kv"><span>ເກັບຊື້ ລະດູນີ້</span><b>${fmt(D.proc)} ໂຕນ</b><span>ຜະລິດແປ້ງ</span><b>${fmt(D.prod)} ໂຕນ</b><span>ສົ່ງອອກ</span><b>${fmt(D.exp)} ໂຕນ</b><span>ອັບເດດ</span><b>${D.last}</b></div>`)}
 const K=rows=>`<div class="kv">${rows.map(([a,v])=>`<span>${a}</span><b>${v}</b>`).join('')}</div>`;
 let FK=null;function focus(k){FK=k;const D=DATA[cur],S=SITES[cur],loc=S.locs.find(l=>l[0]===k)||[k,k,''];controls.autoRotate=false;bRot.setAttribute('aria-pressed','false');setOpen(k);
  const b=BLD[k],c=SITE.chips[k]||[0,0,0],at=k==='warehouse'?b.g.localToWorld(new THREE.Vector3(b.o.w*.2+22,1,-b.o.d/2+6)).toArray():b?[b.o.x,1,b.o.z]:[c[0],0,c[2]];
@@ -315,11 +315,11 @@ let FK=null;function focus(k){FK=k;const D=DATA[cur],S=SITES[cur],loc=S.locs.fin
  const VD={factory:[.5,.9,-.8],warehouse:[.3,.9,1],yard:[-.5,.8,.9],weigh:[-.6,.8,.8]};const dir=VD[k]?new THREE.Vector3(...VD[k]).normalize().applyAxisAngle(new THREE.Vector3(0,1,0),b&&b.g?b.g.rotation.y:0):new THREE.Vector3().subVectors(cam.position,controls.target).normalize();
  const off=dir.clone().multiplyScalar(260);const right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),dir).normalize();const panelPx=box.clientWidth>860&&!box.classList.contains('min')?150:0;const wpp=VIEW/z/box.clientHeight;
  const tg=new THREE.Vector3(...at).addScaledVector(right,-panelPx*wpp);flyTo([tg.x+off.x,tg.y+off.y,tg.z+off.z],tg.toArray(),z);
- if(k==='warehouse'){const t=simT??(D.s25+D.s850);det(`<h3>${loc[1]}</h3><p>ກອງແປ້ງໃນສາງ ອີງຕາມຂໍ້ມູນໃນລະບົບ: ຖົງ 25 kg ເທິງພາເລັດ (1 ພາເລັດ = 1 ໂຕນ) ແລະ ຖົງ Jumbo 850 kg.</p>${K([['ແປ້ງ ຖົງ 25 kg',fmt(D.s25,1)+' ໂຕນ'],['ແປ້ງ ຖົງ 850 kg',fmt(D.s850,1)+' ໂຕນ · '+Math.round(D.s850*1000/850)+' ຖົງ'],['ກາກມັນ',fmt(D.pulp,2)+' ໂຕນ'],['ອັບເດດ',D.last]])}
+ if(k==='warehouse'){const t=simT??(D.s25+D.s850);det(`<h3>${loc[1]}</h3><p>ກອງແປ້ງໃນສາງ ອີງຕາມຂໍ້ມູນໃນລະບົບ: ຖົງ 25 kg ເທິງພາເລັດ (1 ພາເລັດ = 1 ໂຕນ) ແລະ ຖົງ Jumbo 850 kg.</p>${K([['ແປ້ງ ຖົງ 25 kg',fmt(D.s25)+' ໂຕນ'],['ແປ້ງ ຖົງ 850 kg',fmt(D.s850)+' ໂຕນ · '+Math.round(D.s850*1000/850)+' ຖົງ'],['ກາກມັນ',fmt(D.pulp)+' ໂຕນ'],['ອັບເດດ',D.last]])}
   <div class="sim"><label><span>ຈຳລອງປະລິມານ (ສະແດງເທົ່ານັ້ນ)</span><b id="simV">${fmt(t)} ໂຕນ</b></label><input type="range" id="sim" min="0" max="800" step="10" value="${t}"></div>`);
   document.getElementById('sim').oninput=e=>{simT=+e.target.value;document.getElementById('simV').textContent=fmt(simT)+' ໂຕນ';warehouseInterior(BLD.warehouse,simT*.8,simT*.2)};return}
- if(k==='factory')return det(`<h3>${loc[1]}</h3><p>ຂະບວນການຜະລິດພາຍໃນ: ລ້າງ-ປອກເປືອກ → ບົດ → ສະກັດ-ແຍກເສັ້ນໄຍ → Hydrocyclone → Flash Dryer → ບັນຈຸຖົງ.</p>${K([['ມັນຕົ້ນເຂົ້າຜະລິດ',fmt(D.proc)+' ໂຕນ'],['ຜະລິດແປ້ງ',fmt(D.prod,1)+' ໂຕນ'],['ອັດຕາແປງ',D.conv?fmt(D.conv,2)+' : 1':'—']])}`);
- if(k==='yard')return det(`<h3>${loc[1]}</h3><p>${loc[2]}.</p>${K([['ມັນຕົ້ນຄ້າງລານ',fmt(D.raw,1)+' ໂຕນ'],['ເກັບຊື້ ລະດູນີ້',fmt(D.proc)+' ໂຕນ'],['ອັບເດດ',D.last]])}`);
+ if(k==='factory')return det(`<h3>${loc[1]}</h3><p>ຂະບວນການຜະລິດພາຍໃນ: ລ້າງ-ປອກເປືອກ → ບົດ → ສະກັດ-ແຍກເສັ້ນໄຍ → Hydrocyclone → Flash Dryer → ບັນຈຸຖົງ.</p>${K([['ມັນຕົ້ນເຂົ້າຜະລິດ',fmt(D.proc)+' ໂຕນ'],['ຜະລິດແປ້ງ',fmt(D.prod)+' ໂຕນ'],['ອັດຕາແປງ',D.conv?fmt(D.conv,2)+' : 1':'—']])}`);
+ if(k==='yard')return det(`<h3>${loc[1]}</h3><p>${loc[2]}.</p>${K([['ມັນຕົ້ນຄ້າງລານ',fmt(D.raw)+' ໂຕນ'],['ເກັບຊື້ ລະດູນີ້',fmt(D.proc)+' ໂຕນ'],['ອັບເດດ',D.last]])}`);
  if(k==='weigh')return det(`<h3>${loc[1]}</h3><p>ລົດມັນຕົ້ນຊັ່ງນ້ຳໜັກ ແລະ ກວດຄຸນນະພາບ ກ່ອນເຂົ້າລານມັນ.</p>${K([['ເກັບຊື້ ລະດູນີ້',fmt(D.proc)+' ໂຕນ']])}`);
  if(k==='dock')return det(`<h3>${loc[1]}</h3><p>ຂຶ້ນສິນຄ້າໃສ່ລົດ ແລະ ຂົນສົ່ງອອກໄປປະເທດຈີນ.</p>${K([['ສົ່ງອອກ ລະດູນີ້',fmt(D.exp)+' ໂຕນ']])}`);
  det(`<h3>${loc[1]}</h3>${loc[2]?`<p>${loc[2]}.</p>`:''}`)}
@@ -348,7 +348,7 @@ function loop(){const dt=Math.min(.05,clock.getDelta());
  controls.update();FR++;if(FR%3===0)renderer.shadowMap.needsUpdate=true;if(visible){renderer.render(scene,cam);lr.render(scene,cam)}requestAnimationFrame(loop)}
 let FR=0,visible=true;new IntersectionObserver(e=>{visible=e[0].isIntersecting}).observe(box);document.addEventListener('visibilitychange',()=>{visible=!document.hidden});
 function refreshData(){DATA=loadData();const D=DATA[cur];const st=document.getElementById('siteStatus');st.textContent=D.status;st.className='pill3 '+(D.ok?'ok':'wait');
- document.getElementById('kpis').innerHTML=`<div><small>ມັນຕົ້ນຄ້າງລານ</small><strong>${fmt(D.raw,1)}</strong><em>ໂຕນ</em></div><div><small>ຜະລິດແປ້ງ ລະດູນີ້</small><strong>${fmt(D.prod,1)}</strong><em>ໂຕນ</em></div><div><small>ແປ້ງໃນສາງ</small><strong>${fmt(D.s25+D.s850,1)}</strong><em>ໂຕນ</em></div>`;
+ document.getElementById('kpis').innerHTML=`<div><small>ມັນຕົ້ນຄ້າງລານ</small><strong>${fmt(D.raw)}</strong><em>ໂຕນ</em></div><div><small>ຜະລິດແປ້ງ ລະດູນີ້</small><strong>${fmt(D.prod)}</strong><em>ໂຕນ</em></div><div><small>ແປ້ງໃນສາງ</small><strong>${fmt(D.s25+D.s850)}</strong><em>ໂຕນ</em></div>`;
  if(simT==null&&BLD.warehouse)warehouseInterior(BLD.warehouse,D.s25,D.s850);if(FK){const k=FK,c=cam.position.clone(),t=controls.target.clone(),z=cam.zoom;focus(k);fly.p=null;cam.position.copy(c);controls.target.copy(t);cam.zoom=z;cam.updateProjectionMatrix()}else homeDet()}
 window.addEventListener('ls:data',refreshData);
 build('xan');loop();window.__f3d={focus,build,home,r:renderer,BLD,world};

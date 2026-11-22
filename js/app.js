@@ -15,7 +15,7 @@ let SET={},SEASON='2026-27',S0=new Date(2026,8,1),NM=9,M=[],NOWI=0,NOWFRAC=0,FX=
 let plan={},act={},PL={},SEASON_NET={},PU={},CMF={xan:[],nan:[]},contracts=[],SHIP=[],PROC=[],PROD=[],MOVES=[],STK={},LAST={},LOANS=[],LTX=[],OUT_NC={xan:0,nan:0},ADV={xan:0,nan:0},PEND={xan:0,nan:0};
 const AK=['proc','trucks','kip','toProd','waste','prod','p25','p850','onspec','offspec','pulp','pulpSold','exp','e25','e850','inv','invT','rev','revT','cash','ded','dir','ind','int'];
 const PLK=['rexp','rpulp','raw','oth','mkt','salL','salF','admin','maint','support','asset','othI','int'];
-const owe=fs=>{const a=fs.reduce((t,f)=>t+ADV[f],0),p=fs.reduce((t,f)=>t+PEND[f],0),o=[];if(a>0.05)o.push(`ໄດ້ເງິນແລ້ວ ຍັງບໍ່ສົ່ງ ${fmt(a,1)} ໂຕນ`);if(p>0.05)o.push(`ສົ່ງແລ້ວ ລໍຖ້າລາຄາ ${fmt(p,1)} ໂຕນ`);return o.join(' · ')||'ສົ່ງ ແລະ ໃບແຈ້ງໜີ້ ກົງກັນ'};
+const owe=fs=>{const a=fs.reduce((t,f)=>t+ADV[f],0),p=fs.reduce((t,f)=>t+PEND[f],0),o=[];if(a>0.05)o.push(`ໄດ້ເງິນແລ້ວ ຍັງບໍ່ສົ່ງ ${fmt(a)} ໂຕນ`);if(p>0.05)o.push(`ສົ່ງແລ້ວ ລໍຖ້າລາຄາ ${fmt(p)} ໂຕນ`);return o.join(' · ')||'ສົ່ງ ແລະ ໃບແຈ້ງໜີ້ ກົງກັນ'};
 const mi=d=>(d.getFullYear()-S0.getFullYear())*12+d.getMonth()-S0.getMonth();
 const monthDate=i=>new Date(S0.getFullYear(),S0.getMonth()+i,1);
 async function fetchAll(table,filter){
@@ -178,7 +178,7 @@ function render(){
  const nAct=plNet(fs,'a'),nPl=plNet(fs,'p');
  $('#flow').innerHTML=[
   ['ເກັບຊື້ມັນຕົ້ນ',fmt(proc,0),'ໂຕນ',`${kip(pk)} ກີບ · ${pct(tdP?proc/tdP:null)} ຂອງແຜນເຖິງມື້ນີ້`,tdP?proc/tdP:0,`ລາຄາສະເລ່ຍ ${proc?fmt(pk/proc/1000):'—'} ກີບ/kg`],
-  ['ຜະລິດແປ້ງ',fmt(prod,1),'ໂຕນ',`${pct(tdD?prod/tdD:null)} ຂອງແຜນເຖິງມື້ນີ້ · ກາກມັນ ${fmt(pulp,0)} ໂຕນ`,tdD?prod/tdD:0,`ອັດຕາແປງ ${conv?fmt(conv,2):'—'} : 1 (ແຜນ ${PC?fmt(PC,2):'—'})`],
+  ['ຜະລິດແປ້ງ',fmt(prod),'ໂຕນ',`${pct(tdD?prod/tdD:null)} ຂອງແຜນເຖິງມື້ນີ້ · ກາກມັນ ${fmt(pulp,0)} ໂຕນ`,tdD?prod/tdD:0,`ອັດຕາແປງ ${conv?fmt(conv,2):'—'} : 1 (ແຜນ ${PC?fmt(PC,2):'—'})`],
   ['ສົ່ງອອກ',fmt(exp,0),'ໂຕນ',`${pct(tdE?exp/tdE:null)} ຂອງແຜນເຖິງມື້ນີ້`,tdE?exp/tdE:0,owe(fs)],
   ['ກຳໄລ/ຂາດທຶນ ສຸດທິ',mcny(nAct),'ລ້ານ ຢວນ',`ແຜນ ${mcny(nPl)} ລ້ານ · ${mLbl(ixPL)}`,null,(()=>{const r=nPl?1+(nAct-nPl)/Math.abs(nPl):null;return `<span class="pill ${r>=1?'good':r>=.9?'warn':'crit'}" style="margin-top:8px">ປະຕິບັດໄດ້ ${pct(r)}</span>`})()]
  ].map(([l,v,u,sub,bar,r])=>`<div class="step"><div class="lbl">${l}</div><div class="big num">${v}<small>${u}</small></div><div class="sub">${sub}</div>${bar==null?'':`<div class="bar"><i style="width:${Math.min(100,bar*100)}%"></i></div>`}${String(r).startsWith('<')?r:`<span class="ratio">${r}</span>`}<span class="arrow" aria-hidden="true">→</span></div>`).join('');
@@ -188,7 +188,7 @@ function render(){
  $('#pva').innerHTML=[['ເກັບຊື້ມັນຕົ້ນ',proc,tdP,fP],['ຜະລິດແປ້ງ',prod,tdD,fD],['ສົ່ງອອກແປ້ງ',exp,tdE,fE]].map(([n,a,td,full])=>{
   const r=td?a/td:null;const [c,t]=status(r);const sc=Math.max(full,a,1);
   return `<div class="pva-row"><div class="name">${n}<small>ແຜນທັງໄລຍະ ${fmt(full)} ໂຕນ</small></div>
-  <div class="track" data-tip="${q(`<b>${n}</b><br>ຕົວຈິງ ${fmt(a,1)} ໂຕນ<br>ແຜນເຖິງມື້ນີ້ ${fmt(td)} ໂຕນ<br>ແຜນທັງໄລຍະ ${fmt(full)} ໂຕນ`)}"><span class="plan" style="width:${full/sc*100}%"></span><span class="act" style="width:${a/sc*100}%"></span><span class="tick" style="left:${td/sc*100}%"></span></div>
+  <div class="track" data-tip="${q(`<b>${n}</b><br>ຕົວຈິງ ${fmt(a)} ໂຕນ<br>ແຜນເຖິງມື້ນີ້ ${fmt(td)} ໂຕນ<br>ແຜນທັງໄລຍະ ${fmt(full)} ໂຕນ`)}"><span class="plan" style="width:${full/sc*100}%"></span><span class="act" style="width:${a/sc*100}%"></span><span class="tick" style="left:${td/sc*100}%"></span></div>
   <div class="val"><b class="num">${fmt(a)}</b> / ${fmt(td)} ໂຕນ<br><span class="pill ${c}">${t} · ${pct(r)}</span></div></div>`}).join('');
 
 
@@ -221,27 +221,27 @@ function render(){
  $('#cmpNote').textContent=pname()+' · ໂຕນ';
  const prF=F=>plNet(F,'a');const rvF=F=>ixPL.reduce((t,i)=>t+F.reduce((a,f)=>a+PL[f].rexp.a[i]+PL[f].rpulp.a[i],0),0);const rv0=rvF(['xan']),rv1=rvF(['nan']);const pr0=prF(['xan']),pr1=prF(['nan']);
  $('#cmp').innerHTML=`<thead><tr><th>ໂຮງງານ</th><th class="n">ເກັບຊື້</th><th class="n">ຜະລິດ</th><th class="n">ສົ່ງອອກ</th><th class="n">ລາຍຮັບ (ລ້ານ¥)</th><th class="n">ລາຍຈ່າຍ (ລ້ານ¥)</th><th class="n">ກຳໄລ (ລ້ານ¥)</th></tr></thead><tbody>`+
-  rs.map((r,i)=>{const pr=i?pr1:pr0;return `<tr><td>${r[0]}</td><td class="n">${fmt(r[1])}</td><td class="n">${fmt(r[2],1)}</td><td class="n">${fmt(r[3])}</td><td class="n">${ixPL.length?mcny(i?rv1:rv0):'—'}</td><td class="n">${mcny(r[4])}</td><td class="n ${ixPL.length?(pr<0?'neg':'pos'):''}">${ixPL.length?mcny(pr):'—'}</td></tr>`}).join('')+
+  rs.map((r,i)=>{const pr=i?pr1:pr0;return `<tr><td>${r[0]}</td><td class="n">${fmt(r[1])}</td><td class="n">${fmt(r[2])}</td><td class="n">${fmt(r[3])}</td><td class="n">${ixPL.length?mcny(i?rv1:rv0):'—'}</td><td class="n">${mcny(r[4])}</td><td class="n ${ixPL.length?(pr<0?'neg':'pos'):''}">${ixPL.length?mcny(pr):'—'}</td></tr>`}).join('')+
   `<tr class="total"><td>ລວມ</td>${[1,2,3].map(k=>`<td class="n">${fmt(rs[0][k]+rs[1][k],k===2?1:0)}</td>`).join('')}<td class="n">${ixPL.length?mcny(rv0+rv1):'—'}</td><td class="n">${mcny(rs[0][4]+rs[1][4])}</td><td class="n ${ixPL.length?(pr0+pr1<0?'neg':'pos'):''}">${ixPL.length?mcny(pr0+pr1):'—'}</td></tr></tbody>`;
 
  // procure
  pvaBlock('proc','Proc',fs);pvaBlock('prod','Prod',fs);pvaBlock('exp','Exp',fs);
  const trucks=sumA('trucks',fs,ix);
- $('#kProc').innerHTML=kpi('ເກັບຊື້ຕົວຈິງ',fmt(proc,1),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdP)} ໂຕນ`,status(tdP?proc/tdP:null))+kpi('ມູນຄ່າ',kip(pk),'ກີບ',`≈ ${mcny(pk/FX)} ລ້ານ ຢວນ`)+kpi('ຈຳນວນຖ້ຽວ',fmt(trucks),'ຖ້ຽວ',trucks?`ສະເລ່ຍ ${fmt(proc/trucks,1)} ໂຕນ/ຖ້ຽວ`:'')+kpi('ລາຄາສະເລ່ຍ',proc?fmt(pk/proc/1000):'—','ກີບ/kg',ix.filter(i=>fs.some(f=>act[f].proc[i])).map(i=>{const p=fs.reduce((t,f)=>t+act[f].proc[i],0),k=fs.reduce((t,f)=>t+act[f].kip[i],0);return `${M[i].slice(0,2)}: ${fmt(k/p/1000)}`}).join(' · '));
+ $('#kProc').innerHTML=kpi('ເກັບຊື້ຕົວຈິງ',fmt(proc),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdP)} ໂຕນ`,status(tdP?proc/tdP:null))+kpi('ມູນຄ່າ',kip(pk),'ກີບ',`≈ ${mcny(pk/FX)} ລ້ານ ຢວນ`)+kpi('ຈຳນວນຖ້ຽວ',fmt(trucks),'ຖ້ຽວ',trucks?`ສະເລ່ຍ ${fmt(proc/trucks)} ໂຕນ/ຖ້ຽວ`:'')+kpi('ລາຄາສະເລ່ຍ',proc?fmt(pk/proc/1000):'—','ກີບ/kg',ix.filter(i=>fs.some(f=>act[f].proc[i])).map(i=>{const p=fs.reduce((t,f)=>t+act[f].proc[i],0),k=fs.reduce((t,f)=>t+act[f].kip[i],0);return `${M[i].slice(0,2)}: ${fmt(k/p/1000)}`}).join(' · '));
  const procDay=(()=>{const by={};PROC.filter(r=>fs.includes(r.factory)&&(+r.net_kg||0)>0).forEach(r=>{const k=r.date;by[k]=by[k]||[0,0];by[k][0]+=+r.net_kg;by[k][1]+=+r.amount||0});return Object.keys(by).sort().map(k=>[k.slice(8,10)+'/'+k.slice(5,7),by[k][0]/1000,by[k][1]/by[k][0]])})();
  barChart($('#chProcDay'),procDay.map(d=>d[0]),[{name:'ເກັບຊື້',data:procDay.map(d=>d[1]),color:'var(--s1)'}],{unit:' ໂຕນ',dec:1,label:'ເກັບຊື້ຕໍ່ມື້',maxLbl:8});
  if(procDay.length){const pv=procDay.map(d=>d[2]).filter(v=>v<1e5),tg=SET.cassava_price_target&&+SET.cassava_price_target.value;const lo=Math.floor(Math.min(...pv,tg||1e9)/50)*50-50,hi=Math.ceil(Math.max(...pv,tg||0)/50)*50+50;lineChart($('#chPrice'),procDay.map(d=>d[0]),procDay.map(d=>Math.min(d[2],hi)),{lo,hi,step:niceStep((hi-lo)/6),unit:'ກີບ/kg',label:'ລາຄາເກັບຊື້',target:tg||null,tlabel:tg?`${SET.cassava_price_target.label||'ເປົ້າໝາຍ'}: ${fmt(tg)}`:''})}else $('#chPrice').innerHTML='<p class="issue">ຍັງບໍ່ມີຂໍ້ມູນ</p>';
  const _pm=1;$('#tProcM').innerHTML=`<thead><tr><th>ເດືອນ</th><th class="n">ຖ້ຽວ</th><th class="n">ເກັບຊື້ (ໂຕນ)</th><th class="n">ມູນຄ່າ (ກີບ)</th><th class="n">ກີບ/kg</th><th class="n">ເຂົ້າຜະລິດ (ໂຕນ)</th><th class="n">ສູນເສຍ</th></tr></thead><tbody>`+
-  [...Array(NOWI+1).keys()].filter(i=>fs.some(f=>act[f].proc[i])).map(i=>{const p=fs.reduce((t,f)=>t+act[f].proc[i],0),k=fs.reduce((t,f)=>t+act[f].kip[i],0),tp=fs.reduce((t,f)=>t+act[f].toProd[i],0),tr=fs.reduce((t,f)=>t+act[f].trucks[i],0);return `<tr><td>${M[i]}</td><td class="n">${fmt(tr)}</td><td class="n">${fmt(p,1)}</td><td class="n">${kip(k)}</td><td class="n">${p?fmt(k/p/1000):'—'}</td><td class="n">${fmt(tp,1)}</td><td class="n">${p?pct(1-tp/p):'—'}</td></tr>`}).join('')+
+  [...Array(NOWI+1).keys()].filter(i=>fs.some(f=>act[f].proc[i])).map(i=>{const p=fs.reduce((t,f)=>t+act[f].proc[i],0),k=fs.reduce((t,f)=>t+act[f].kip[i],0),tp=fs.reduce((t,f)=>t+act[f].toProd[i],0),tr=fs.reduce((t,f)=>t+act[f].trucks[i],0);return `<tr><td>${M[i]}</td><td class="n">${fmt(tr)}</td><td class="n">${fmt(p)}</td><td class="n">${kip(k)}</td><td class="n">${p?fmt(k/p/1000):'—'}</td><td class="n">${fmt(tp)}</td><td class="n">${p?pct(1-tp/p):'—'}</td></tr>`}).join('')+
   (fs.some(f=>act[f].proc[NOWI])?'':`<tr><td>${M[NOWI]}</td><td colspan="6" class="issue">ຍັງບໍ່ມີຂໍ້ມູນ · ແຜນ ${fmt(fs.reduce((t,f)=>t+plan[f].proc[NOWI],0))} ໂຕນ</td></tr>`)+'</tbody>';
  const sup=(()=>{const by={};PROC.filter(r=>fs.includes(r.factory)&&(+r.net_kg||0)>0).forEach(r=>{const k=r.supplier||'—';by[k]=by[k]||[k,r.account_name||'',0,0,0];by[k][2]++;by[k][3]+=+r.net_kg;by[k][4]+=+r.amount||0});return Object.values(by).map(v=>[v[0],v[1],v[2],v[3],v[4]/v[3]]).sort((a,b)=>b[3]-a[3])})();
  const SUP_TOT=sup.reduce((t,s)=>t+s[3],0),SUP_N=sup.reduce((t,s)=>t+s[2],0),supTop=sup.slice(0,8);
  $('#tSup').innerHTML=sup.length?`<thead><tr><th>ຜູ້ສົ່ງ</th><th class="n">ຖ້ຽວ</th><th class="n">ໂຕນ</th><th class="n">ກີບ/kg</th><th>ສ່ວນແບ່ງ</th></tr></thead><tbody>`+
-  supTop.map(s=>`<tr><td>${esc(s[0])}<div class="src">${esc(s[1])}</div></td><td class="n">${s[2]}</td><td class="n">${fmt(s[3]/1000,1)}</td><td class="n">${fmt(s[4])}</td><td><span class="mini"><i style="width:${s[3]/SUP_TOT*100*2}%"></i></span>${pct(s[3]/SUP_TOT)}</td></tr>`).join('')+
-  (sup.length>8?`<tr><td>ອື່ນໆ ${sup.length-8} ລາຍ</td><td class="n">${SUP_N-supTop.reduce((t,s)=>t+s[2],0)}</td><td class="n">${fmt((SUP_TOT-supTop.reduce((t,s)=>t+s[3],0))/1000,1)}</td><td></td><td>${pct(1-supTop.reduce((t,s)=>t+s[3],0)/SUP_TOT)}</td></tr>`:'')+'</tbody>':'<tbody><tr><td class="src">ຍັງບໍ່ມີຂໍ້ມູນການເກັບຊື້</td></tr></tbody>';
+  supTop.map(s=>`<tr><td>${esc(s[0])}<div class="src">${esc(s[1])}</div></td><td class="n">${s[2]}</td><td class="n">${fmt(s[3]/1000)}</td><td class="n">${fmt(s[4])}</td><td><span class="mini"><i style="width:${s[3]/SUP_TOT*100*2}%"></i></span>${pct(s[3]/SUP_TOT)}</td></tr>`).join('')+
+  (sup.length>8?`<tr><td>ອື່ນໆ ${sup.length-8} ລາຍ</td><td class="n">${SUP_N-supTop.reduce((t,s)=>t+s[2],0)}</td><td class="n">${fmt((SUP_TOT-supTop.reduce((t,s)=>t+s[3],0))/1000)}</td><td></td><td>${pct(1-supTop.reduce((t,s)=>t+s[3],0)/SUP_TOT)}</td></tr>`:'')+'</tbody>':'<tbody><tr><td class="src">ຍັງບໍ່ມີຂໍ້ມູນການເກັບຊື້</td></tr></tbody>';
 
  // produce
- $('#kProd').innerHTML=kpi('ແປ້ງຜະລິດໄດ້',fmt(prod,1),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdD)} ໂຕນ`,status(tdD?prod/tdD:null))+kpi('ອັດຕາແປງ',conv?fmt(conv,2):'—',': 1',`ໂຕນ ມັນຕົ້ນທີ່ເກັບຊື້ ຕໍ່ ໂຕນ ແປ້ງ · ແຜນ ${PC?fmt(PC,2):'—'}`)+(()=>{const on=sumA('onspec',fs,ix),off=sumA('offspec',fs,ix);return kpi('On spec',on+off?pct(on/(on+off)):'—','',`25 kg: ${fmt(sumA('p25',fs,ix),1)} ໂຕນ · 850 kg: ${fmt(sumA('p850',fs,ix),1)} ໂຕນ`)})()+kpi('ກາກມັນ',fmt(pulp,1),'ໂຕນ',`ຂາຍ/ອອກແລ້ວ ${fmt(sumA('pulpSold',fs,ix),1)} ໂຕນ · ເຫຼືອ ${fmt(fs.reduce((t,f)=>t+STK[f].pulp,0),1)} ໂຕນ`);
+ $('#kProd').innerHTML=kpi('ແປ້ງຜະລິດໄດ້',fmt(prod),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdD)} ໂຕນ`,status(tdD?prod/tdD:null))+kpi('ອັດຕາແປງ',conv?fmt(conv,2):'—',': 1',`ໂຕນ ມັນຕົ້ນທີ່ເກັບຊື້ ຕໍ່ ໂຕນ ແປ້ງ · ແຜນ ${PC?fmt(PC,2):'—'}`)+(()=>{const on=sumA('onspec',fs,ix),off=sumA('offspec',fs,ix);return kpi('On spec',on+off?pct(on/(on+off)):'—','',`25 kg: ${fmt(sumA('p25',fs,ix))} ໂຕນ · 850 kg: ${fmt(sumA('p850',fs,ix))} ໂຕນ`)})()+kpi('ກາກມັນ',fmt(pulp),'ໂຕນ',`ຂາຍ/ອອກແລ້ວ ${fmt(sumA('pulpSold',fs,ix))} ໂຕນ · ເຫຼືອ ${fmt(fs.reduce((t,f)=>t+STK[f].pulp,0))} ໂຕນ`);
  const prodRows=PROD.filter(r=>fs.includes(r.factory)&&(+r.raw_kg||0)>0&&(+r.output_kg||0)>0).sort((a,b)=>a.d-b.d).map(r=>[r.date.slice(8,10)+'/'+r.date.slice(5,7),+r.raw_kg,r.starch_pct==null?null:+r.starch_pct,+r.expected_kg||0,+r.output_kg,(+r.raw_kg)/(+r.output_kg),+r.pulp_kg||0]);
  barChart($('#chDaily'),prodRows.map(r=>r[0]),[{name:'ແປ້ງ',data:prodRows.map(r=>r[4]/1000),color:'var(--s1)'}],{unit:' ໂຕນ',dec:1,label:'ແປ້ງຕໍ່ມື້',maxLbl:8});
  if(prodRows.length)lineChart($('#chConv'),prodRows.map(r=>r[0]),prodRows.map(r=>r[5]),{lo:Math.min(3,Math.floor(Math.min(...prodRows.map(r=>r[5]))*2)/2),hi:Math.max(5.5,Math.ceil(Math.max(...prodRows.map(r=>r[5]))*2)/2),step:.5,axd:1,dec:2,unit:'ໂຕນ ມັນ / ໂຕນ ແປ້ງ',label:'ອັດຕາແປງ',target:PC,tlabel:PC?'ແຜນ '+fmt(PC,2):'',dots:true,bad:v=>v>4.5});else $('#chConv').innerHTML='<p class="issue">ຍັງບໍ່ມີຂໍ້ມູນ</p>';
@@ -254,20 +254,20 @@ function render(){
  const cT=S(4),cDep=S(6),cRecv=S(10),cInvT=S(7),cOff=S(9),cBal=cRecv-cOff,cOwe=cDep-cRecv;
  $('#kSales').innerHTML=kpi('ສົ່ງອອກ (ອອກສາງ)',fmt(exp),'ໂຕນ',`ແຜນເຖິງມື້ນີ້ ${fmt(tdE)} ໂຕນ<br>${owe(fs)}`,status(tdE?exp/tdE:null))+kpi('ສັນຍາທັງໝົດ',fmt(cT),'ໂຕນ',`${cs.length} ສັນຍາ · ${pct(cT/plan_total(fs,'prod'))} ຂອງແຜນຜະລິດທັງລະດູ`)+
   kpi('ລາຄາສົ່ງອອກສະເລ່ຍ',sumA('invT',fs,ix)?fmt(sumA('inv',fs,ix)/sumA('invT',fs,ix)):'—','ຢວນ/ໂຕນ',exp?`ຕາມມື້ສົ່ງອອກ · ຊ່ວງ ${(()=>{const pr=SHIP.filter(s=>fs.includes(s.factory)&&s.price>0).map(s=>+s.price);return pr.length?fmt(Math.min(...pr))+'–'+fmt(Math.max(...pr)):'—'})()} · ມູນຄ່າໃບແຈ້ງໜີ້ ${mcny(sumA('inv',fs,ix))} ລ້ານ`:'ຍັງບໍ່ມີການສົ່ງອອກ')+
-  kpi('ສິນຄ້າຄ້າງສາງ',fmt(stockT,1),'ໂຕນ',stockT?`ແປ້ງ · 25 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s25,0),1)} · 850 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s850,0),1)} · ກາກມັນ ${fmt(fs.reduce((t,f)=>t+STK[f].pulp,0),2)} ໂຕນ`:'ບໍ່ມີສິນຄ້າໃນສາງ');
+  kpi('ສິນຄ້າຄ້າງສາງ',fmt(stockT),'ໂຕນ',stockT?`ແປ້ງ · 25 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s25,0))} · 850 kg: ${fmt(fs.reduce((t,f)=>t+STK[f].s850,0))} · ກາກມັນ ${fmt(fs.reduce((t,f)=>t+STK[f].pulp,0))} ໂຕນ`:'ບໍ່ມີສິນຄ້າໃນສາງ');
  // latest price = newest invoice lot (by lot number) of the contract; overall = newest lot of the most recently shipped contract
  const lotLast=L=>L.filter(x=>+x.price>0).sort((p,q)=>String(p.invoice_no||'').localeCompare(String(q.invoice_no||''),undefined,{numeric:true})).slice(-1)[0];
  const recent=SHIP.filter(x=>+x.price>0).slice(-1)[0];const lastPxAll=recent?(lotLast(SHIP.filter(x=>x.factory===recent.factory&&String(x.contract_no||'').split('-').slice(0,4).join('-')===String(recent.contract_no||'').split('-').slice(0,4).join('-')))||recent).price:null;
  const cPx=c=>{const l=lotLast(SHIP.filter(x=>(x.contract_no||'').startsWith(c[1])));return l?[+l.price,'ລາຄາລ່າສຸດ ຂອງສັນຍານີ້']:lastPxAll?[+lastPxAll,'ຍັງບໍ່ມີໃບແຈ້ງໜີ້ · ລາຄາລ່າສຸດ']:[null,'']};
  {const s25=fs.reduce((t,f)=>t+STK[f].s25,0),s850=fs.reduce((t,f)=>t+STK[f].s850,0),pu=fs.reduce((t,f)=>t+STK[f].pulp,0),stT=s25+s850,owed=fs.reduce((t,f)=>t+ADV[f],0),free=Math.max(0,stT-owed),px=+lastPxAll||0,pp=+SET.pulp_price||0;
   const mx=a=>a.length?isoD(isoOf(new Date(Math.max(...a.map(r=>+r.d))))):'—';
-  $('#kStk').innerHTML=kpi('ແປ້ງໃນສາງ',fmt(stT,1),'ໂຕນ',`25 kg: ${fmt(s25,1)} · 850 kg: ${fmt(s850,1)}`)+kpi('ມູນຄ່າປະມານ',fmt(stT*px+pu*pp),'ຢວນ',`ແປ້ງ ${fmt(px)} ຢວນ/ໂຕນ (ລາຄາສົ່ງອອກລ່າສຸດ) · ກາກມັນ ${fmt(pp)}`)+
-   kpi('ຕິດໜີ້ແປ້ງລູກຄ້າ',fmt(owed,1),'ໂຕນ','ໄດ້ເງິນແລ້ວ ຍັງບໍ່ສົ່ງ')+kpi('ແປ້ງທີ່ຍັງບໍ່ຜູກມັດ',fmt(free,1),'ໂຕນ',owed>stT?`ຕ້ອງຜະລິດເພີ່ມ ${fmt(owed-stT,1)} ໂຕນ ເພື່ອສົ່ງໃຫ້ຄົບ`:'ຂາຍໃຫ້ລູກຄ້າອື່ນໄດ້',owed>stT?['warn','ແປ້ງໃນສາງ ບໍ່ພໍສົ່ງ']:null);
+  $('#kStk').innerHTML=kpi('ແປ້ງໃນສາງ',fmt(stT),'ໂຕນ',`25 kg: ${fmt(s25)} · 850 kg: ${fmt(s850)}`)+kpi('ມູນຄ່າປະມານ',fmt(stT*px+pu*pp),'ຢວນ',`ແປ້ງ ${fmt(px)} ຢວນ/ໂຕນ (ລາຄາສົ່ງອອກລ່າສຸດ) · ກາກມັນ ${fmt(pp)}`)+
+   kpi('ຕິດໜີ້ແປ້ງລູກຄ້າ',fmt(owed),'ໂຕນ','ໄດ້ເງິນແລ້ວ ຍັງບໍ່ສົ່ງ')+kpi('ແປ້ງທີ່ຍັງບໍ່ຜູກມັດ',fmt(free),'ໂຕນ',owed>stT?`ຕ້ອງຜະລິດເພີ່ມ ${fmt(owed-stT)} ໂຕນ ເພື່ອສົ່ງໃຫ້ຄົບ`:'ຂາຍໃຫ້ລູກຄ້າອື່ນໄດ້',owed>stT?['warn','ແປ້ງໃນສາງ ບໍ່ພໍສົ່ງ']:null);
   let tv=0;const rows=[];fs.forEach(f=>{const S=STK[f],pd=mx(PROD.filter(r=>r.factory===f&&+r.output_kg>0)),od=mx(MOVES.filter(r=>r.factory===f&&r.kind==='starch'&&r.direction==='out'));
    rows.push([FN[f],'ແປ້ງ · ຖົງ 25 kg',S.s25,fmt(S.s25*40)+' ຖົງ',fmt(Math.round(S.s25))+' ພາເລັດ',px,pd,od],[FN[f],'ແປ້ງ · Jumbo 850 kg',S.s850,fmt(S.s850/0.85)+' ຖົງ','—',px,pd,od],[FN[f],'ກາກມັນ',S.pulp,'—','—',pp,pd,mx(MOVES.filter(r=>r.factory===f&&r.kind==='pulp'))])});
   $('#tStk').innerHTML=`<thead><tr><th>ໂຮງງານ</th><th>ສິນຄ້າ</th><th class="n">ໂຕນ</th><th class="n">ຈຳນວນຖົງ</th><th class="n">ພາເລັດ</th><th class="n">ລາຄາ (ຢວນ/ໂຕນ)</th><th class="n">ມູນຄ່າ (ຢວນ)</th><th>ຜະລິດລ່າສຸດ</th><th>ອອກສາງລ່າສຸດ</th></tr></thead><tbody>`+
-   rows.map(r=>{const v=r[2]>0?r[2]*r[5]:0;tv+=v;return `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="n"><b>${fmt(r[2],2)}</b></td><td class="n">${r[2]>0?r[3]:'—'}</td><td class="n">${r[2]>0?r[4]:'—'}</td><td class="n">${r[5]?fmt(r[5]):'—'}</td><td class="n">${v?fmt(v):'—'}</td><td>${r[6]}</td><td>${r[7]}</td></tr>`}).join('')+
-   `<tr class="total"><td colspan="2">ລວມ</td><td class="n">${fmt(stT+pu,2)}</td><td colspan="3"></td><td class="n">${fmt(tv)}</td><td colspan="2"></td></tr></tbody>`}
+   rows.map(r=>{const v=r[2]>0?r[2]*r[5]:0;tv+=v;return `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="n"><b>${fmt(r[2])}</b></td><td class="n">${r[2]>0?r[3]:'—'}</td><td class="n">${r[2]>0?r[4]:'—'}</td><td class="n">${r[5]?fmt(r[5]):'—'}</td><td class="n">${v?fmt(v):'—'}</td><td>${r[6]}</td><td>${r[7]}</td></tr>`}).join('')+
+   `<tr class="total"><td colspan="2">ລວມ</td><td class="n">${fmt(stT+pu)}</td><td colspan="3"></td><td class="n">${fmt(tv)}</td><td colspan="2"></td></tr></tbody>`}
  $('#tCon').innerHTML=`<thead><tr><th>ເລກທີສັນຍາ</th><th>ຜູ້ຊື້</th><th>ໂຮງງານ</th><th class="n">ປະລິມານ (ໂຕນ)</th><th class="n">ລາຄາທີ່ໃຊ້ (ຢວນ/ໂຕນ)</th><th class="n">ມູນຄ່າສັນຍາ (ຢວນ)</th><th class="n">ມູນຄ່າມັດຈຳ (ຢວນ)</th><th class="n">% ຫັກຈາກລາຍຮັບ</th><th>ອອກສາງ (ໂຕນ)</th><th class="n">ອອກໃບແຈ້ງໜີ້ (ໂຕນ)</th><th class="n">ລໍຖ້າໃບແຈ້ງໜີ້ (ໂຕນ)</th></tr></thead><tbody>`+
   cs.map(c=>`<tr><td class="mono">${c[1]}</td><td>${c[2]}<div class="src">${c[3]}</div></td><td>${FN[c[0]]}</td><td class="n">${fmt(c[4])}</td><td class="n">${cPx(c)[0]?fmt(cPx(c)[0]):'—'}<div class="src">${cPx(c)[1]}</div></td><td class="n"><b>${cPx(c)[0]?fmt(cPx(c)[0]*c[4]):'—'}</b></td><td class="n">${fmt(c[6])}</td><td class="n">${c[11]==null?'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>':`<b>${pct(c[11])}</b>`}</td><td style="white-space:nowrap"><span class="mini"><i style="width:${Math.min(100,c[15]/c[4]*100)}%"></i></span>${fmt(c[15])} (${pct(c[15]/c[4])})</td><td class="n">${fmt(c[7])}</td><td class="n">${c[15]-c[7]>0.5?`<span class="pill warn">${fmt(c[15]-c[7])}</span>`:'—'}</td></tr>`).join('')+
   (fs.reduce((t,f)=>t+OUT_NC[f],0)>0.5?`<tr><td colspan="8" class="issue">ອອກສາງ ທີ່ຈັບຄູ່ກັບສັນຍາບໍ່ໄດ້ (ຊື່ບໍລິສັດໃນ Sheet 5.x ບໍ່ກົງກັບຜູ້ຊື້)</td><td>${fmt(fs.reduce((t,f)=>t+OUT_NC[f],0))}</td><td></td><td></td></tr>`:'')+
@@ -335,9 +335,9 @@ function render(){
    return `<tr class="r-${t}"><td class="lbl">${n}</td>${COLS.map((_,j)=>`<td class="n pl${j?' gs':''}">${F(p[j])}</td><td class="n ac${neg(a[j])}">${F(a[j])}</td>`).join('')}<td class="n pl gs tt">${F(P)}</td><td class="n ac tt${neg(A)}">${F(A)}</td><td class="n tt ${Math.abs(d)<.5?'':good?'pos':'neg'}">${d>0?'+':''}${F(d)}</td><td class="tt">${!P?'—':isCost&&A>P?'<span class="pill over">ເກີນແຜນ</span>':achPill(r)}</td></tr>`}
  // stock
  const SK=k=>fs.reduce((t,f)=>t+STK[f][k],0);
- $('#kStock').innerHTML=kpi('ແປ້ງ On spec',fmt(SK('starch'),1),'ໂຕນ',`25 kg: ${fmt(SK('s25'),1)} · 850 kg: ${fmt(SK('s850'),1)}`)+kpi('ກາກມັນ',fmt(SK('pulp'),2),'ໂຕນ',`${fmt(+SET.pulp_price||0)} ຢວນ/ໂຕນ`)+kpi('ມັນຕົ້ນຄ້າງລານ',fmt(SK('raw'),1),'ໂຕນ',dfmt(LAST.proc),SK('raw')>150?['warn','! ຄວນເຂົ້າຜະລິດໄວ']:null)+kpi('ຄິດເປັນຕູ້ (28 ໂຕນ)',fmt(SK('starch')/28,1),'ຕູ້',`ສັນຍາຍັງເຫຼືອ ${fmt(contracts.filter(c=>fs.includes(c[0])).reduce((t,c)=>t+Math.max(0,c[4]-c[7]),0))} ໂຕນ`);
+ $('#kStock').innerHTML=kpi('ແປ້ງ On spec',fmt(SK('starch')),'ໂຕນ',`25 kg: ${fmt(SK('s25'))} · 850 kg: ${fmt(SK('s850'))}`)+kpi('ກາກມັນ',fmt(SK('pulp')),'ໂຕນ',`${fmt(+SET.pulp_price||0)} ຢວນ/ໂຕນ`)+kpi('ມັນຕົ້ນຄ້າງລານ',fmt(SK('raw')),'ໂຕນ',dfmt(LAST.proc),SK('raw')>150?['warn','! ຄວນເຂົ້າຜະລິດໄວ']:null)+kpi('ຄິດເປັນຕູ້ (28 ໂຕນ)',fmt(SK('starch')/28,1),'ຕູ້',`ສັນຍາຍັງເຫຼືອ ${fmt(contracts.filter(c=>fs.includes(c[0])).reduce((t,c)=>t+Math.max(0,c[4]-c[7]),0))} ໂຕນ`);
  let open=fs.reduce((t,f)=>t+STK[f].open,0);const rowsS=[...Array(NOWI+1).keys()].map(i=>{const pr=fs.reduce((t,f)=>t+act[f].prod[i],0),ex=fs.reduce((t,f)=>t+act[f].exp[i],0);const r=[M[i],open,pr,ex,open+pr-ex];open=r[4];return r});
- $('#tStock').innerHTML=`<thead><tr><th>ເດືອນ</th><th class="n">ຍົກມາ</th><th class="n">+ ຜະລິດ</th><th class="n">− ສົ່ງອອກ</th><th class="n">= ເຫຼືອ</th></tr></thead><tbody>`+rowsS.map((r,k)=>`<tr${k===rowsS.length-1?' class="total"':''}><td>${r[0]}</td>${r.slice(1).map(v=>`<td class="n">${fmt(v,1)}</td>`).join('')}</tr>`).join('')+'</tbody>';
+ $('#tStock').innerHTML=`<thead><tr><th>ເດືອນ</th><th class="n">ຍົກມາ</th><th class="n">+ ຜະລິດ</th><th class="n">− ສົ່ງອອກ</th><th class="n">= ເຫຼືອ</th></tr></thead><tbody>`+rowsS.map((r,k)=>`<tr${k===rowsS.length-1?' class="total"':''}><td>${r[0]}</td>${r.slice(1).map(v=>`<td class="n">${fmt(v)}</td>`).join('')}</tr>`).join('')+'</tbody>';
  const lastPx=(SHIP.filter(s=>fs.includes(s.factory)).slice(-1)[0]||{}).price;
  $('#tStockVal').innerHTML=`<thead><tr><th>ລາຄາທີ່ໃຊ້</th><th class="n">ຢວນ/ໂຕນ</th><th class="n">ມູນຄ່າ (ຢວນ)</th></tr></thead><tbody>`+
   [['ລາຄາສົ່ງອອກ ຄັ້ງລ່າສຸດ',+lastPx||0],['ຕົ້ນທຶນຕົວຈິງ ຕໍ່ ໂຕນ (ອ້າງອີງ)',UNIT.totA||0]].map(([n,p])=>`<tr><td>${n}</td><td class="n">${p?fmt(p):'—'}</td><td class="n">${p?fmt(SK('starch')*p):'—'}</td></tr>`).join('')+'</tbody>';
@@ -349,14 +349,14 @@ function pvaBlock(key,pre,fs){
  const td=P.reduce((t,v,i)=>t+(i<NOWI?v:i===NOWI?v*NOWFRAC:0),0);
  const left=Math.max(0,yr-ytd),mLeft=Math.max(1,M.length-NOWI);
  const pill=r=>r==null?'—':`<span class="pill ${r>=1?'good':r>=.9?'warn':'crit'}">${pct(r)}</span>`;
- $('#pk'+pre).innerHTML=kpi('ແຜນໝົດປີ',fmt(yr),'ໂຕນ',`${M[0]}–${M[M.length-1]}`)+kpi('ຕົວຈິງສະສົມ',fmt(ytd,1),'ໂຕນ',`${pct(yr?ytd/yr:null)} ຂອງແຜນໝົດປີ`,[yr&&ytd/yr>=1?'good':'mute','ໝົດປີ '+pct(yr?ytd/yr:null)])+
+ $('#pk'+pre).innerHTML=kpi('ແຜນໝົດປີ',fmt(yr),'ໂຕນ',`${M[0]}–${M[M.length-1]}`)+kpi('ຕົວຈິງສະສົມ',fmt(ytd),'ໂຕນ',`${pct(yr?ytd/yr:null)} ຂອງແຜນໝົດປີ`,[yr&&ytd/yr>=1?'good':'mute','ໝົດປີ '+pct(yr?ytd/yr:null)])+
   kpi('ທຽບແຜນເຖິງມື້ນີ້',pct(td?ytd/td:null),'',`ແຜນເຖິງ ${dfmt(yday()).slice(0,5)}: ${fmt(td)} ໂຕນ`,status(td?ytd/td:null))+kpi('ຍັງເຫຼືອທີ່ຕ້ອງປະຕິບັດ',fmt(left),'ໂຕນ',`≈ ${fmt(left/mLeft)} ໂຕນ/ເດືອນ ໃນ ${mLeft} ເດືອນທີ່ເຫຼືອ`);
  barChart($('#pc'+pre),M.map(m=>m.slice(0,2)+'/'+m.slice(5)),[{name:'ແຜນ',data:P,color:'var(--s1-ghost)'},{name:'ຕົວຈິງ',data:A,color:'var(--s1)'}],{unit:' ໂຕນ',dec:1,label:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ',vl:1});
  let cp=0,ca=0;
  $('#pt'+pre).innerHTML=`<thead><tr><th>ເດືອນ</th><th class="n">ແຜນ</th><th class="n">ຕົວຈິງ</th><th>ປະຕິບັດໄດ້</th><th class="n">ແຜນສະສົມ</th><th class="n">ຈິງສະສົມ</th><th>ສະສົມ</th></tr></thead><tbody>`+
   M.map((m,i)=>{cp+=P[i];const has=A[i]!=null;if(has)ca+=A[i];
-   return `<tr><td>${m}</td><td class="n">${fmt(P[i])}</td><td class="n">${has?fmt(A[i],1):'—'}</td><td>${has?pill(P[i]?A[i]/P[i]:null):i===NOWI?'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>':''}</td><td class="n">${fmt(cp)}</td><td class="n">${has?fmt(ca,1):''}</td><td>${has?pill(cp?ca/cp:null):''}</td></tr>`}).join('')+
-  `<tr class="total"><td>ໝົດປີ</td><td class="n">${fmt(yr)}</td><td class="n">${fmt(ytd,1)}</td><td>${pill(yr?ytd/yr:null)}</td><td colspan="3"></td></tr></tbody>`;
+   return `<tr><td>${m}</td><td class="n">${fmt(P[i])}</td><td class="n">${has?fmt(A[i]):'—'}</td><td>${has?pill(P[i]?A[i]/P[i]:null):i===NOWI?'<span class="pill mute">ລໍຖ້າຂໍ້ມູນ</span>':''}</td><td class="n">${fmt(cp)}</td><td class="n">${has?fmt(ca):''}</td><td>${has?pill(cp?ca/cp:null):''}</td></tr>`}).join('')+
+  `<tr class="total"><td>ໝົດປີ</td><td class="n">${fmt(yr)}</td><td class="n">${fmt(ytd)}</td><td>${pill(yr?ytd/yr:null)}</td><td colspan="3"></td></tr></tbody>`;
 }
 function plan_total(fs,k){return fs.reduce((t,f)=>t+plan[f][k].reduce((a,b)=>a+b,0),0)}
 
@@ -531,7 +531,7 @@ function notesHTML(){
  const nA=net('a'),nP=net('p');
  const it=[
   ['ເກັບຊື້ມັນຕົ້ນ',P('proc')?pr/P('proc'):null,`${fmt(pr)} / ${fmt(P('proc'))} ໂຕນ`,'ທຽບແຜນເຖິງມື້ນີ້'],
-  ['ຜະລິດແປ້ງ',P('prod')?pd/P('prod'):null,`${fmt(pd,1)} / ${fmt(P('prod'))} ໂຕນ`,`ອັດຕາແປງ ${conv?fmt(conv,2):'—'} : 1 · ແຜນ ${planConv(fs)?fmt(planConv(fs),2):'—'}`],
+  ['ຜະລິດແປ້ງ',P('prod')?pd/P('prod'):null,`${fmt(pd)} / ${fmt(P('prod'))} ໂຕນ`,`ອັດຕາແປງ ${conv?fmt(conv,2):'—'} : 1 · ແຜນ ${planConv(fs)?fmt(planConv(fs),2):'—'}`],
   ['ສົ່ງອອກແປ້ງ',P('exp')?ex/P('exp'):null,`${fmt(ex)} / ${fmt(P('exp'))} ໂຕນ`,owe(fs)],
   ['ກຳໄລ/ຂາດທຶນ ສຸດທິ',ixPL.length?ach(nA,nP):null,ixPL.length?`${mcny(nA)} / ${mcny(nP)} ລ້ານ ຢວນ`:'ຍັງບໍ່ມີຂໍ້ມູນ','ຕົວຈິງ / ແຜນ'],
   (()=>{const e=fs.reduce((t,f)=>t+PU[f].exp,0),pp=e?fs.reduce((t,f)=>t+PU[f].rexp,0)/e:0,ap=sumA('invT',fs,ix)?sumA('inv',fs,ix)/sumA('invT',fs,ix):null;return ['ລາຄາຂາຍແປ້ງ',ap?ap/pp:null,ap?`${fmt(ap)} / ${fmt(pp)} ຢວນ/ໂຕນ`:'ຍັງບໍ່ມີການສົ່ງອອກ','ສະເລ່ຍ ຕາມມື້ສົ່ງອອກ']})()];
@@ -693,7 +693,7 @@ function renderLoanUse(){
  const D=W.filter(x=>x.done),P=W.filter(x=>!x.done);const wK=D.reduce((s,x)=>s+x.w,0),pK=D.reduce((s,x)=>s+x.k,0),df=wK-pK;
  const pend=P.length?`${P.length} ງວດ ${m(P.reduce((s,x)=>s+x.w,0))} ພັນຢວນ ຍັງບໍ່ນັບ (${P.map(x=>isoD(x.t.date).slice(0,5)).join(', ')}): ${P.some(x=>x.end>dataEnd)?`ລໍຖ້າຂໍ້ມູນເກັບຊື້ ຮອດ ${isoD(P[P.length-1].end).slice(0,5)}`:'ຍັງຢູ່ໃນໄລຍະໃຊ້ເງິນ'}`:'';
  $('#useK').innerHTML=(D.length?kpi('ເບີກທຶນໝູນວຽນ ຊື້ມັນ (ງວດທີ່ຄົບກຳນົດ)',m(wK),'ພັນຢວນ',`${D.length} ງວດ · ${isoD(D[0].t.date)} – ${isoD(D[D.length-1].t.date)}`)+
-   kpi(`ຍອດເກັບຊື້ມັນຕົ້ນ ${isoD(D[0].t.date).slice(0,5)} – ${isoD(D[D.length-1].end).slice(0,5)}`,m(pK),'ພັນຢວນ',`${fmt(tonP(D[0].t.date,D[D.length-1].end),1)} ໂຕນ`)+
+   kpi(`ຍອດເກັບຊື້ມັນຕົ້ນ ${isoD(D[0].t.date).slice(0,5)} – ${isoD(D[D.length-1].end).slice(0,5)}`,m(pK),'ພັນຢວນ',`${fmt(tonP(D[0].t.date,D[D.length-1].end))} ໂຕນ`)+
    kpi('ສ່ວນຕ່າງ (ເບີກ − ເກັບຊື້)',(df>0?'+':'')+m(df),'ພັນຢວນ',df>0?'ກວດວ່າເງິນສ່ວນເກີນ ຍັງຢູ່ໃນບັນຊີ ຫຼື ໃຊ້ຜິດເປົ້າໝາຍ':'ເງິນກູ້ທີ່ເບີກ ໃຊ້ເກັບຊື້ມັນໝົດ',df>0?['warn',`ເບີກເກີນຍອດເກັບຊື້ ${pct(df/wK)}`]:['good','ຍອດເກັບຊື້ ຄອບຄຸມເງິນກູ້']):'')+
   (P.length?kpi('ງວດທີ່ຍັງບໍ່ນັບ',m(P.reduce((s,x)=>s+x.w,0)),'ພັນຢວນ',pend.split(': ')[1]||'',['mute',P.map(x=>isoD(x.t.date).slice(0,5)).join(', ')]):'');
  $('#useT').innerHTML=`<thead><tr><th>ເບີກວັນທີ</th><th class="n">ເບີກ</th><th>ຊ່ວງເກັບຊື້</th><th class="n">ເກັບຊື້</th><th class="n">ສ່ວນຕ່າງ</th></tr></thead><tbody>`+
