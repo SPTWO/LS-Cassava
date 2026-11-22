@@ -420,6 +420,9 @@ table.pvt tr.fut td.ac{font-weight:400}
 .login-box .btn{padding:11px;font-size:15px}
 .login-msg{margin:0;min-height:1.4em;font-size:13px;color:var(--crit)}
 .who-box{display:flex;flex-direction:column;align-items:center;gap:3px}
+.brand{flex:1 1 auto}
+.brand .who-box{margin-left:auto;margin-right:clamp(0px,24vw,330px);flex:none}
+@media (max-width:900px){.brand .who-box{margin-right:0}}
 .logout{font:inherit;font-size:11px;font-weight:600;color:var(--ink-2);background:none;border:0;padding:1px 6px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .logout:hover{color:var(--crit,#b42318)}
 .who{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border-radius:999px;padding:5px 12px;white-space:nowrap}
@@ -661,6 +664,7 @@ button,a,select{cursor:pointer}
         <img src="assets/logo.png" alt="LS 农业集团">
         <div><small>LS 农业集团 · LS Trading Export-Import Co., Ltd</small>
         <h1>ລະບົບຕິດຕາມການດຳເນີນທຸລະກິດ ຜະລິດ-ສົ່ງອອກ ແປ້ງມັນຕົ້ນ</h1></div>
+        <div class="who-box"><span class="who" id="who"></span><button type="button" class="logout" id="logout">ອອກຈາກລະບົບ</button></div>
       </div>
       <div class="controls">
         <div class="seg" role="group" aria-label="ເລືອກໂຮງງານ" id="factorySeg">
@@ -671,7 +675,6 @@ button,a,select{cursor:pointer}
         <div class="prd" id="prd" role="group" aria-label="ໄລຍະເວລາ"><button type="button" data-p="season" aria-pressed="true">ລະດູນີ້</button><button type="button" data-p="month" aria-pressed="false">ເດືອນນີ້</button><label for="pFrom">ຈາກ</label><input type="date" id="pFrom"><label for="pTo">ຫາ</label><input type="date" id="pTo"></div>
         <div class="zoom" role="group" aria-label="ຂະໜາດໜ້າຈໍ"><button type="button" id="zOut" aria-label="ຊູມອອກ">−</button><button type="button" id="zReset" aria-label="ກັບຄືນ 100%">100%</button><button type="button" id="zIn" aria-label="ຊູມເຂົ້າ">+</button></div>
         <button type="button" class="btn rep-btn" id="repOpen">⤓ ດຶງ Report</button>
-        <div class="who-box"><span class="who" id="who"></span><button type="button" class="logout" id="logout">ອອກຈາກລະບົບ</button></div>
       </div>
     </div>
     <nav class="tabs" aria-label="ໝວດ">
