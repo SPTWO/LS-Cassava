@@ -741,9 +741,10 @@ const CF={sel:null,u:null,t:null,c:null};
 const CF_LBL={in_starch:'ຂາຍແປ້ງ (ຕາມໃບແຈ້ງໜີ້)',in_dep:'ເງິນມັດຈຳ ຈາກລູກຄ້າ',in_pulp:'ຂາຍກາກມັນ',in_other:'ລາຍຮັບອື່ນ',cassava:'ຊື້ມັນຕົ້ນ ແລະ ຄ່ານາຍໜ້າ',staff:'ເງິນເດືອນ, ອາຫານ ແລະ ສະຫວັດດີການ',energy:'ຖ່ານຫີນ, ໄຟຟ້າ ແລະ ນ້ຳມັນ',transport:'ຂົນສົ່ງ ແລະ ແຮງງານຂົນຍ້າຍ',maint:'ສ້ອມແປງ ແລະ ອາໄຫຼ່',pack:'ຖົງ ແລະ ອຸປະກອນບັນຈຸ',petty:'ໂອນເຂົ້າເງິນສົດຍ່ອຍ / ເງິນສຳຮອງ',admin:'ບໍລິຫານ, ຄ່າທຳນຽມ ແລະ ອື່ນໆ',capex:'ກໍ່ສ້າງ ແລະ ຊື້ຊັບສິນ',draw:'ເບີກເງິນກູ້',repay:'ຊຳລະຕົ້ນທຶນເງິນກູ້',interest:'ຊຳລະດອກເບ້ຍ',x:'ໂອນ ແລະ ແລກປ່ຽນ ລະຫວ່າງບັນຊີ (ສຸດທິ)'};
 const CF_ORD={op:['in_starch','in_dep','in_pulp','in_other','cassava','staff','energy','transport','maint','pack','petty','admin'],inv:['capex'],fin:['draw','repay','interest'],int:['x']};
 function cfGrp(r){const a=String(r.activity||'').toUpperCase(),k=String(r.code||''),ds=String(r.descr||'');
+ if(a==='ACC TO ACC'&&/ຊຳລະ\s*ດອກເບ[ັ້]*ຍ/.test(ds))return['fin','interest']; // moved to the pulp account (not in Banking) to pay interest
  if(a==='ACC TO ACC'||a==='EXCHANGE')return['int','x'];if(a.startsWith('BANK LOAN-INCREASE'))return['fin','draw'];if(a.startsWith('BANK LOAN-DECREASE'))return['fin','repay'];if(/^Interest Loan/i.test(k))return['fin','interest'];
  // customer deposits vs payment of invoices: read from the description (invoice receipts also mention the 20% deposit deduction)
- if(a==='REVENUE')return /Residue/i.test(k)?['op','in_pulp']:/Topioca|Tapioca/i.test(k)?(/ມັດຈຳ|ໝັດຈຳ/.test(ds)&&!/INV-|INVOICE|ລາຍຮັບ ແປ້ງ|ລາຍຮັບ-ຂາຍ|ຄ່າແປ້ງ/i.test(ds)?['op','in_dep']:['op','in_starch']):['op','in_other'];
+ if(a==='REVENUE')return /Residue/i.test(k)?['op','in_pulp']:/Topioca|Tapioca/i.test(k)?(/[ມໝ]ັດຈ(?:ຳ|ໍາ)/.test(ds)&&!/INV-|INVOICE|ລາຍຮັບ ແປ້ງ|ລາຍຮັບ-ຂາຍ|ຄ່າແປ້ງ/i.test(ds)?['op','in_dep']:['op','in_starch']):['op','in_other'];
  if(/ຄ່າ\s*ກະແສໄຟຟ້າ|ຄ່າໄຟຟ້າ/.test(ds))return['op','energy']; // electricity bills booked under an asset code
  if(/Construction|Asset/i.test(k))return['inv','capex'];if(/Cassava/i.test(k))return['op','cassava'];if(/Salary|Staff Food|Canteen|Insurance|Perdiem/i.test(k))return['op','staff'];
  if(/Coal|Electricity|Fuel/i.test(k))return['op','energy'];if(/Transportation|Labour up-down/i.test(k))return['op','transport'];if(/Sparepart|Repair/i.test(k))return['op','maint'];
