@@ -262,7 +262,7 @@ function render(){
  {const s25=fs.reduce((t,f)=>t+STK[f].s25,0),s850=fs.reduce((t,f)=>t+STK[f].s850,0),pu=fs.reduce((t,f)=>t+STK[f].pulp,0),stT=s25+s850,owed=fs.reduce((t,f)=>t+ADV[f],0),free=Math.max(0,stT-owed),px=+lastPxAll||0,pp=+SET.pulp_price||0;
   const mx=a=>a.length?isoD(isoOf(new Date(Math.max(...a.map(r=>+r.d))))):'—';
   $('#kStk').innerHTML=kpi('ແປ້ງໃນສາງ',fmt(stT),'ໂຕນ',`25 kg: ${fmt(s25)} · 850 kg: ${fmt(s850)}`)+kpi('ມູນຄ່າປະມານ',fmt(stT*px+pu*pp),'ຢວນ',`ແປ້ງ ${fmt(px)} ຢວນ/ໂຕນ (ລາຄາສົ່ງອອກລ່າສຸດ) · ກາກມັນ ${fmt(pp)}`)+
-   kpi('ຕິດໜີ້ແປ້ງລູກຄ້າ',fmt(owed),'ໂຕນ','ໄດ້ເງິນແລ້ວ ຍັງບໍ່ສົ່ງ')+kpi('ແປ້ງທີ່ຍັງບໍ່ຜູກມັດ',fmt(free),'ໂຕນ',owed>stT?`ຕ້ອງຜະລິດເພີ່ມ ${fmt(owed-stT)} ໂຕນ ເພື່ອສົ່ງໃຫ້ຄົບ`:'ຂາຍໃຫ້ລູກຄ້າອື່ນໄດ້',owed>stT?['warn','ແປ້ງໃນສາງ ບໍ່ພໍສົ່ງ']:null);
+   kpi('ຕິດໜີ້ແປ້ງລູກຄ້າ',fmt(owed),'ໂຕນ','ໄດ້ເງິນແລ້ວ ຍັງບໍ່ສົ່ງ')+kpi('ຈຳນວນຖົງ',fmt(s25*40),'ຖົງ 25 kg',`Jumbo 850 kg: ${fmt(s850/0.85)} ຖົງ`,owed>stT?['warn',`ແປ້ງໃນສາງ ບໍ່ພໍສົ່ງ ${fmt(owed-stT)} ໂຕນ`]:null);
   let tv=0;const rows=[];fs.forEach(f=>{const S=STK[f],pd=mx(PROD.filter(r=>r.factory===f&&+r.output_kg>0)),od=mx(MOVES.filter(r=>r.factory===f&&r.kind==='starch'&&r.direction==='out'));
    rows.push([FN[f],'ແປ້ງ · ຖົງ 25 kg',S.s25,fmt(S.s25*40)+' ຖົງ',fmt(Math.round(S.s25))+' ພາເລັດ',px,pd,od],[FN[f],'ແປ້ງ · Jumbo 850 kg',S.s850,fmt(S.s850/0.85)+' ຖົງ','—',px,pd,od],[FN[f],'ກາກມັນ',S.pulp,'—','—',pp,pd,mx(MOVES.filter(r=>r.factory===f&&r.kind==='pulp'))])});
   $('#tStk').innerHTML=`<thead><tr><th>ໂຮງງານ</th><th>ສິນຄ້າ</th><th class="n">ໂຕນ</th><th class="n">ຈຳນວນຖົງ</th><th class="n">ພາເລັດ</th><th class="n">ລາຄາ (ຢວນ/ໂຕນ)</th><th class="n">ມູນຄ່າ (ຢວນ)</th><th>ຜະລິດລ່າສຸດ</th><th>ອອກສາງລ່າສຸດ</th></tr></thead><tbody>`+
