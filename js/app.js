@@ -796,7 +796,7 @@ function renderCash(){
   const T={};COLS.forEach(([c])=>T[c]=rows.reduce((s2,r)=>s2+(r.g[c]||0),0));const outs=T.cass+T.debt+T.other,pc=v=>outs<0?pct(v/outs):'—';
   $('#kLoanUse').innerHTML=kpi('ເງິນເຂົ້າ: ເງິນກູ້ / ຂາຍແປ້ງ / ມັດຈຳ',kk(T.loan+T.sale+T.dep),'ພັນຢວນ',`${kk(T.loan)} / ${kk(T.sale)} / ${kk(T.dep)}`)+kpi('ເງິນອອກ',kk(outs),'ພັນຢວນ',`ຊື້ມັນ ${kk(T.cass)} · ຊຳລະໜີ້ ${kk(T.debt)} · ອື່ນ ${kk(T.other)}`)+
    kpi('ສັດສ່ວນເງິນອອກ',`ຊຳລະໜີ້ ${pc(T.debt)}`,'',`ຊື້ມັນ ${pc(T.cass)} · ລາຍຈ່າຍອື່ນ ${pc(T.other)}`)+kpi(`ເງິນສົດ ${isoD(a).slice(0,5)} → ${isoD(b).slice(0,5)}`,`${kk(open)} → ${kk(bl)}`,'ພັນຢວນ',bl<open?`ຫຼຸດລົງ ${kk(open-bl)}`:`ເພີ່ມຂຶ້ນ ${kk(bl-open)}`);
-  const hd=lab=>`<thead><tr><th>${lab}</th>${COLS.map(([,n,cl])=>`<th class="n ${cl}">${n}</th>`).join('')}<th class="n">ຂາດ / ເກີນ</th><th class="n">ຍອດເງິນສົດ</th><th class="n">ຜະລິດ (ໂຕນ)</th><th class="n">ສົ່ງອອກ (ໂຕນ)</th></tr></thead>`;
+  const U='<br><small class="src">ພັນຢວນ</small>';const hd=lab=>`<thead><tr><th>${lab}</th>${COLS.map(([,n,cl])=>`<th class="n ${cl}">${n}${U}</th>`).join('')}<th class="n">ຂາດ / ເກີນ${U}</th><th class="n">ຍອດເງິນສົດ${U}</th><th class="n">ຜະລິດ (ໂຕນ)</th><th class="n">ສົ່ງອອກ (ໂຕນ)</th></tr></thead>`;
   const cellv=(c,v)=>c==='loan'&&Math.abs(v)>=50?`<b class="dr">+${kk(v)}</b>`:kk(v);
   const ms=[...new Set(rows.map(r=>r.d.slice(0,7)))];
   $('#tLoanM').innerHTML=hd('ເດືອນ')+'<tbody>'+ms.map(mo=>{const R2=rows.filter(r=>r.d.slice(0,7)===mo);const sm=c=>R2.reduce((x,r)=>x+(r.g[c]||0),0);const nt=R2.reduce((x,r)=>x+r.nt,0);
