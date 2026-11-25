@@ -685,7 +685,7 @@ function renderLoanUse(){
  const sumP=(d0,d1)=>Object.entries(day).filter(([d])=>d>=d0&&d<=d1).reduce((s,[,v])=>s+v,0);
  const tonP=(d0,d1)=>PROC.filter(r=>fs.includes(r.factory)&&r.date>=d0&&r.date<=d1).reduce((s,r)=>s+(+r.net_kg||0),0)/1000;
  const add=(d,n)=>{const x=toDate(d);x.setDate(x.getDate()+n);return isoOf(x)};
- $('#useNote').textContent=`ປະເພດທີ່ກວດ: ${(catOf('wc')||{n:'ທຶນໝູນວຽນ ຊື້ມັນຕົ້ນ'}).n} · ຍອດເກັບຊື້: ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]} · ຂໍ້ມູນເກັບຊື້ຮອດ ${isoD(dataEnd)} · ງວດລ່າສຸດ ມີເວລາໃຊ້ ${USE_DAYS} ມື້ · ພັນຢວນ`;
+ $('#useNote').textContent='ຫົວໜ່ວຍ: ພັນຢວນ';
  if(!wc.length){$('#useK').innerHTML=`<div class="kpi"><div class="d">ບໍ່ມີການເບີກເງິນກູ້ ປະເພດທີ່ກວດກັບຍອດເກັບຊື້ ໃນ ${isoD(a)} – ${isoD(b)}</div></div>`;$('#useT').innerHTML='';$('#useCh').innerHTML='';return}
  // each draw is matched with purchases until the next draw; the latest one with the next 7 days
  const W=wc.map((t,i)=>{const end=wc[i+1]?add(wc[i+1].date,-1):add(t.date,USE_DAYS-1);const done=end<=dataEnd&&(wc[i+1]||end<today);const to=end<dataEnd?end:dataEnd;
