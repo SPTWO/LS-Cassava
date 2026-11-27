@@ -557,6 +557,14 @@ body{background:#f5f7f4}main{font-size:14.5px}
 .ldt th.gi{color:var(--good)}.ldt th.go{color:#b85a1c}
 .ldw{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:12px}
 .ldw th{position:sticky;top:0;background:var(--surface);z-index:1}
+#tLoanD th.lab{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;font-weight:500;min-width:230px;max-width:230px;box-sizing:border-box;box-shadow:1px 0 0 var(--line)}
+#tLoanD thead th.lab{z-index:3}#tLoanD thead th{top:0}
+#tLoanD td.tot,#tLoanD th.tot{font-weight:700;background:var(--surface-2);position:sticky;left:230px;z-index:2;box-shadow:1px 0 0 var(--line)}#tLoanD thead th.tot{z-index:3}
+#tLoanD td.draw,#tLoanD th.draw{background:rgb(47 95 176 / .14)}#tLoanD td b.dr{color:#2f5fb0}
+#tLoanD td.deficit{background:var(--warn-bg)}
+#tLoanD tr.sec th,#tLoanD tr.sec td{background:var(--surface-2);font-weight:700;padding-top:10px}
+#tLoanD tr.sec.gi th{color:var(--good)}#tLoanD tr.sec.go th{color:#b85a1c}
+#tLoanD tr.sub th,#tLoanD tr.sub td{font-weight:700;border-top:1px solid var(--line)}
 /* motion: hover / press / modal / toast (tab content is animated by js/motion.js) */
 .kpi{transition:transform .15s cubic-bezier(.2,0,0,1),box-shadow .15s cubic-bezier(.2,0,0,1)}
 .kpi:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgb(16 40 24 / .05),0 12px 24px -12px rgb(16 40 24 / .22)}
@@ -989,7 +997,7 @@ button,a,select{cursor:pointer}
       <div class="tbl" style="margin-top:12px"><table id="tLoanM" class="ldt"></table></div>
     </div>
     <div class="panel">
-      <header><h2>ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍວັນ <small class="src">(ໜ່ວຍ: ພັນຢວນ)</small></h2><p>ແຖວສີຟ້າ = ມື້ທີ່ທະນາຄານປ່ອຍເງິນກູ້ · ຊ່ອງສີສົ້ມ = ມື້ທີ່ເງິນອອກຫຼາຍກວ່າເງິນເຂົ້າ</p></header>
+      <header><h2>ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍວັນ <small class="src">(ໜ່ວຍ: ພັນຢວນ)</small></h2><p>ຖັນສີຟ້າ = ມື້ທີ່ທະນາຄານປ່ອຍເງິນກູ້ · ຊ່ອງສີສົ້ມ = ມື້ທີ່ເງິນອອກຫຼາຍກວ່າເງິນເຂົ້າ · ເລື່ອນຂວາເພື່ອເບິ່ງວັນທີອື່ນ</p></header>
       <label class="src" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="ldHide" checked> ເຊື່ອງມື້ທີ່ບໍ່ມີລາຍການ</label>
       <div class="ldw" style="margin-top:10px"><table id="tLoanD" class="ldt"></table></div>
     </div>

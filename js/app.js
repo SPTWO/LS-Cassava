@@ -803,7 +803,20 @@ function renderCash(){
    return `<tr class="${nt<-50?'deficit':''}"><td><b>${M[mi(toDate(mo+'-01'))]||mo}</b></td>${COLS.map(([c])=>`<td class="n">${cellv(c,sm(c))}</td>`).join('')}<td class="n g ${nt<0?'neg':'pos'}"><b>${kk(nt)}</b></td><td class="n">${kk(R2[R2.length-1].bl)}</td><td class="n">${fmt(R2.reduce((x,r)=>x+r.pr,0))}</td><td class="n">${fmt(R2.reduce((x,r)=>x+r.ex,0))}</td></tr>`}).join('')+
    `<tr class="total"><td>ລວມ</td>${COLS.map(([c])=>`<td class="n">${kk(T[c])}</td>`).join('')}<td class="n">${kk(bl-open)}</td><td class="n">${kk(bl)}</td><td class="n">${fmt(rows.reduce((x,r)=>x+r.pr,0))}</td><td class="n">${fmt(rows.reduce((x,r)=>x+r.ex,0))}</td></tr></tbody>`;
   const hide=$('#ldHide').checked;
-  $('#tLoanD').innerHTML=hd('ວັນທີ')+'<tbody>'+rows.filter(r=>!hide||Object.keys(r.g).length||r.pr||r.ex).map(r=>`<tr class="${Math.abs(r.g.loan||0)>=50?'draw ':''}${r.nt<-50?'deficit':''}"><td>${isoD(r.d).slice(0,5)}</td>${COLS.map(([c])=>`<td class="n">${cellv(c,r.g[c]||0)}</td>`).join('')}<td class="n g ${r.nt<0?'neg':'pos'}">${kk(r.nt)}</td><td class="n">${kk(r.bl)}</td><td class="n">${r.pr?fmt(r.pr):'—'}</td><td class="n">${r.ex?fmt(r.ex):'—'}</td></tr>`).join('')+'</tbody>'}
+  // daily: categories as rows, dates as columns (in / out / cash / production)
+  const PCd={};PROC.filter(r=>fsF.includes(r.factory)&&(+r.net_kg||0)>0).forEach(r=>{PCd[r.date]=(PCd[r.date]||0)+(+r.net_kg)/1000});
+  rows.forEach(r=>{r.pc=PCd[r.d]||0;r.ins=(r.g.loan||0)+(r.g.sale||0)+(r.g.dep||0);r.out=(r.g.cass||0)+(r.g.debt||0)+(r.g.other||0)});
+  const DR=rows.filter(r=>!hide||Object.keys(r.g).length||r.pr||r.ex||r.pc);
+  const sum=f=>rows.reduce((x,r)=>x+f(r),0);const t1=v=>v?fmt(v):'—';
+  const cls=r=>(Math.abs(r.g.loan||0)>=50?'draw':'');
+  const line=(lab,f,fT,o={})=>`<tr class="${o.cl||''}"><th class="lab">${lab}</th><td class="n tot">${fT}</td>${DR.map(r=>{const v=f(r);return `<td class="n ${cls(r)} ${o.neg&&v<-50?'deficit':''}">${o.cell?o.cell(v):kk(v)}</td>`}).join('')}</tr>`;
+  const sec=(t,c)=>`<tr class="sec ${c}"><th class="lab">${t}</th><td class="tot"></td>${DR.map(r=>`<td class="${cls(r)}"></td>`).join('')}</tr>`;
+  const nm=c=>COLS.find(x=>x[0]===c)[1];
+  $('#tLoanD').innerHTML=`<thead><tr><th class="lab">ລາຍການ</th><th class="n tot">ລວມ</th>${DR.map(r=>`<th class="n ${cls(r)}">${isoD(r.d).slice(0,5)}</th>`).join('')}</tr></thead><tbody>`+
+   sec('ເງິນເຂົ້າ','gi')+['loan','sale','dep'].map(c=>line(nm(c),r=>r.g[c]||0,kk(T[c]),c==='loan'?{cell:v=>cellv('loan',v)}:{})).join('')+line('ລວມເງິນເຂົ້າ',r=>r.ins,kk(T.loan+T.sale+T.dep),{cl:'sub'})+
+   sec('ເງິນອອກ','go')+['cass','debt','other'].map(c=>line(nm(c),r=>r.g[c]||0,kk(T[c]))).join('')+line('ລວມເງິນອອກ',r=>r.out,kk(outs),{cl:'sub'})+
+   sec('ເງິນສົດ','')+line('ຂາດ / ເກີນ ຂອງມື້',r=>r.nt,kk(bl-open),{cl:'sub',neg:1})+line('ຍອດເງິນສົດ',r=>r.bl,kk(bl))+
+   sec('ຍອດການຜະລິດ (ໂຕນ)','')+line('ມັນຕົ້ນຮັບເຂົ້າ',r=>r.pc,fmt(sum(r=>r.pc)),{cell:t1})+line('ຜະລິດແປ້ງ',r=>r.pr,fmt(sum(r=>r.pr)),{cell:t1})+line('ສົ່ງອອກ',r=>r.ex,fmt(sum(r=>r.ex)),{cell:t1})+'</tbody>'}
  // balances by account
  const keys=[...new Set(AR.map(r=>r.account+'|'+r.currency))].sort();let tk=0;$('#cbNote').textContent='ຍອດ ຮອດ '+isoD(b);
  const bl=keys.map(k=>{const [ac,cu]=k.split('|');const v=AR.filter(r=>r.account===ac&&r.currency===cu).reduce((s,r)=>s+(+r.opening||0)+(r.date&&r.date<=b?(+r.amt_in||0)-(+r.amt_out||0):0),0);return [ac,cu,v]}).filter(x=>Math.abs(x[2])>=5);
