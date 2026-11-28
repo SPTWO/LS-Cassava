@@ -491,22 +491,21 @@ const REP={
    [[{t:'ເກັບຊື້ມັນຕົ້ນ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyProc'},{t:'ຜະລິດແປ້ງ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyProd'},{t:'ສົ່ງອອກແປ້ງ ລາຍເດືອນ (ໂຕນ)',id:'chMonthlyExp'}],[{t:'ກຳໄລ/ຂາດທຶນ ສຸດທິ ລາຍເດືອນ (ລ້ານ ຢວນ)',id:'chNet'},{t:'ຕົ້ນທຶນ ຕໍ່ ແປ້ງ 1 ໂຕນ (ຢວນ/ໂຕນ, ຊະນະຄາມ)',id:'tUnit'}]]]},
  procure:{lo:'ເກັບຊື້ມັນຕົ້ນ',en:'procurement',d:'ປະລິມານ, ລາຄາ, ຜູ້ສົ່ງ',pages:[
    [[{id:'kProc',plain:1}],[{id:'pkProc',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcProc',w:3},{t:'ລາຍເດືອນ ແລະ ໝົດປີ (ໂຕນ)',id:'ptProc',w:2}]],
-   [[{t:'ເກັບຊື້ ຕໍ່ມື້ (ໂຕນ)',id:'chProcDay'},{t:'ລາຄາເກັບຊື້ ຕໍ່ມື້ (ກີບ/kg)',id:'chPrice'}],[{t:'ສະຫຼຸບລາຍເດືອນ',id:'tProcM'},{t:'ຜູ້ສົ່ງມັນ ລາຍໃຫຍ່',id:'tSup'}]]]},
+   [[{t:'ເກັບຊື້ ຕໍ່ມື້ (ໂຕນ)',id:'chProcDay'},{t:'ລາຄາເກັບຊື້ ຕໍ່ມື້ (ກີບ/kg)',id:'chPrice'}],[{t:'ສະຫຼຸບລາຍເດືອນ',id:'tProcM'},{t:'ຜູ້ສົ່ງມັນ ລາຍໃຫຍ່',id:'tSup',rows:12}]]]},
  produce:{lo:'ຜະລິດ',en:'production',d:'ຜົນຜະລິດ, ອັດຕາແປງ',pages:[
    [[{id:'kProd',plain:1}],[{id:'pkProd',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcProd',w:3},{t:'ລາຍເດືອນ ແລະ ໝົດປີ (ໂຕນ)',id:'ptProd',w:2}]],
-   [[{stack:[{t:'ແປ້ງໄດ້ ຕໍ່ມື້ (ໂຕນ)',id:'chDaily'},{t:'ອັດຕາສ່ວນແປ້ງມັນຕົ້ນ',id:'chConv'}],w:2},{t:'ບັນທຶກການຜະລິດ',id:'tProd',w:3}]]]},
+   [[{stack:[{t:'ແປ້ງໄດ້ ຕໍ່ມື້ (ໂຕນ)',id:'chDaily'},{t:'ອັດຕາສ່ວນແປ້ງມັນຕົ້ນ',id:'chConv'}],w:2},{t:'ບັນທຶກການຜະລິດ',id:'tProd',w:3,rows:20,drop:['%','ກາກ']}]]]},
  sales:{lo:'ສົ່ງອອກ',en:'export',d:'ສົ່ງອອກ, ລາຄາ, ຕະຫຼາດ, ສັນຍາ',pages:[
    [[{id:'kSales',plain:1}],[{t:'ແຜນ VS ຕົວຈິງ ລາຍເດືອນ (ໂຕນ)',id:'pcExp',w:3},{t:'ລາຍເດືອນ ແລະ ໝົດປີ (ໂຕນ)',id:'ptExp',w:2}],[{t:'ລາຄາສົ່ງອອກ ຕາມມື້ຂົນສົ່ງ (ຢວນ/ໂຕນ)',id:'chExpPrice',w:3},{t:'ຕະຫຼາດສົ່ງອອກ (ໂຕນ)',id:'mkt',leg:1,w:2}]],
-   [[{t:'ສັນຍາຊື້-ຂາຍແປ້ງມັນຕົ້ນ (ຢວນ)',id:'tCon'}],[{t:'ເງິນມັດຈຳສັນຍາ (ຢວນ)',id:'tDep'}],[{t:'ການສົ່ງອອກ ຕາມໃບແຈ້ງໜີ້ (ຢວນ)',id:'tShip'}]]]},
+   [[{t:'ສັນຍາຊື້-ຂາຍແປ້ງມັນຕົ້ນ (ຢວນ)',id:'tCon'}],[{t:'ເງິນມັດຈຳສັນຍາ (ຢວນ)',id:'tDep'}],[{t:'ການສົ່ງອອກ ຕາມໃບແຈ້ງໜີ້ (ຢວນ)',id:'tShip',rows:10,last:1}]]]},
  cost:{lo:'ຕົ້ນທຶນ & ກຳໄລ',en:'cost-profit',d:'ງົບກຳໄລ-ຂາດທຶນ ທຽບແຜນ',pages:[
    [[{id:'kCost',plain:1}],[{t:'ກຳໄລ/ຂາດທຶນ ສຸດທິ ລາຍເດືອນ (ລ້ານ ຢວນ)',id:'chNet',w:3},{t:'ແຍກໂຮງງານ (ລ້ານ ຢວນ)',id:'tPLf',w:2}],[{t:'ຕົ້ນທຶນ ຕໍ່ ແປ້ງ 1 ໂຕນ (ຢວນ/ໂຕນ, ຊະນະຄາມ)',id:'tUnit',w:3},{t:'ຈຸດສຳຄັນ',notes:1,w:2}]],
    [[{t:'ງົບກຳໄລ-ຂາດທຶນ ແຜນ VS ຕົວຈິງ (ຢວນ)',id:'tPL'}]]]},
  debt:{lo:'ພັນທະໜີ້ສິນ',en:'debt',d:'ເງິນກູ້, ຍອດເຫຼືອ, ການເບີກ-ຊຳລະ',pages:[
-   [[{id:'kDebt',plain:1}],[{t:'ເງິນກູ້ທະນາຄານ',id:'tDebt'}],[{t:'ການນຳໃຊ້ເງິນກູ້ ແລະ ຍອດໜີ້',id:'chBal',w:2},{t:'ປະຫວັດການເບີກ ແລະ ຊຳລະ',id:'tTx',w:3}]]]},
+   [[{id:'kDebt',plain:1}],[{t:'ເງິນກູ້ທະນາຄານ',id:'tDebt'}],[{t:'ການນຳໃຊ້ເງິນກູ້ ແລະ ຍອດໜີ້',id:'chBal',w:2},{t:'ປະຫວັດການເບີກ ແລະ ຊຳລະ',id:'tTx',w:3,rows:12}]]]},
  cash:{lo:'ກະແສເງິນສົດ',en:'cash-flow',d:'ເງິນເຂົ້າ-ອອກ, ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ',pages:[
-   [[{id:'kCash',plain:1}],[{t:'ເງິນເຂົ້າ-ອອກ ແລະ ຍອດເງິນສົດ ລາຍເດືອນ (ພັນຢວນ)',id:'chCash',w:3},{t:'ຍອດເງິນ ແຕ່ລະບັນຊີ',id:'tCashBal',w:2}]],
-   [[{t:'ງົບກະແສເງິນສົດ (ພັນຢວນ)',id:'tCash'}]],
-   [[{id:'kLoanUse',plain:1}],[{t:'ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍເດືອນ (ພັນຢວນ)',id:'tLoanM'}]]],
+   [[{id:'kCash',plain:1}],[{t:'ເງິນເຂົ້າ-ອອກ ແລະ ຍອດເງິນສົດ ລາຍເດືອນ (ພັນຢວນ)',id:'chCash',w:3},{t:'ຍອດເງິນ ແຕ່ລະບັນຊີ',id:'tCashBal',w:2}],[{t:'ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍເດືອນ (ພັນຢວນ)',id:'tLoanM'}]],
+   [[{t:'ງົບກະແສເງິນສົດ (ພັນຢວນ)',id:'tCash'}]]],
    xls:[{t:'ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍວັນ',id:'tLoanD'}]}};
 const rs={sel:['overview'],fmt:'pdf'};
 const loadScript=src=>new Promise((ok,no)=>{if(document.querySelector(`script[src="${src}"]`))return ok();const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error('load'));document.head.appendChild(e)});
@@ -536,8 +535,14 @@ function cloneBlock(b){
  if(b.notes)return notesHTML();
  const src=document.getElementById(b.id);if(!src)return '';
  const c=src.cloneNode(true);c.removeAttribute('id');c.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+ let note='';
+ // long tables: keep only the most important columns and the latest rows so the page stays readable (full data in Excel)
+ if(src.tagName==='TABLE'&&b.drop){const hr=c.tHead&&c.tHead.rows[c.tHead.rows.length-1];if(hr){const ix=[...hr.cells].map((h,i)=>b.drop.some(d=>h.textContent.trim().startsWith(d))?i:-1).filter(i=>i>=0).sort((x,y)=>y-x);
+  const n=hr.cells.length;[...c.rows].forEach(r=>{if(r.cells.length===n)ix.forEach(i=>r.cells[i]&&r.cells[i].remove())})}}
+ if(src.tagName==='TABLE'&&b.rows&&c.tBodies[0]){const all=[...c.tBodies[0].rows],data=all.filter(r=>!r.classList.contains('total'));
+  if(data.length>b.rows){const keep=new Set(b.last?data.slice(-b.rows):data.slice(0,b.rows));data.forEach(r=>{if(!keep.has(r))r.remove()});note=`<p class="rp-note">ສະແດງ ${b.rows} ລາຍການ${b.id==='tSup'?'ໃຫຍ່ສຸດ':'ລ່າສຸດ'} ຈາກທັງໝົດ ${data.length} · ລາຍລະອຽດຄົບຢູ່ໃນ Report Excel</p>`}}
  let html=c.outerHTML;
- if(src.tagName==='TABLE')html=`<div class="tbl">${html}</div>`;
+ if(src.tagName==='TABLE')html=`<div class="tbl">${html}</div>${note}`;
  if(b.leg){const lg=src.parentElement.querySelector('.legend');if(lg)html+=lg.outerHTML}
  return html}
 function inlineSvg(root){root.querySelectorAll('svg, svg *').forEach(el=>{const cs=getComputedStyle(el);['fill','stroke','stroke-width','stroke-dasharray','font-size','font-family','opacity'].forEach(p=>{const v=cs.getPropertyValue(p);if(v)el.style.setProperty(p,v)})});root.querySelectorAll('.hit').forEach(h=>h.remove())}
@@ -772,7 +777,7 @@ function renderCash(){
  const G=rs.map(r=>[r,cfGrp(r)]);const S=(mo,sec,key)=>G.filter(([r,g])=>(!mo||r.date.slice(0,7)===mo)&&g[0]===sec&&(!key||g[1]===key)).reduce((t,[r])=>t+val(r),0);
  const open=balAt(prev(a)),close=balAt(b),opIn=G.filter(([,g])=>g[0]==='op'&&g[1].startsWith('in_')).reduce((t,[r])=>t+val(r),0),opNet=S(null,'op'),net=['op','inv','fin','int'].reduce((t,x)=>t+S(null,x),0);
  $('#kCash').innerHTML=kpi(`ເງິນສົດ ຕົ້ນງວດ (${isoD(a)})`,m(open),'ພັນຢວນ','ທຸກບັນຊີ ທຽບເທົ່າຢວນ')+kpi('ເງິນເຂົ້າ ຈາກການດຳເນີນງານ',m(opIn),'ພັນຢວນ',`ຂາຍແປ້ງ ${m(S(null,'op','in_starch'))} · ມັດຈຳ ${m(S(null,'op','in_dep'))} · ກາກມັນ ${m(S(null,'op','in_pulp'))}`)+kpi('ເງິນອອກ ຈາກການດຳເນີນງານ',m(opNet-opIn),'ພັນຢວນ','ຊື້ມັນຕົ້ນ, ເງິນເດືອນ, ພະລັງງານ …')+
-  kpi('ກະແສເງິນສົດ ສຸດທິ',(net>0?'+':'')+m(net),'ພັນຢວນ',`${isoD(a)} – ${isoD(b)}`,[net>=0?'good':'warn',net>=0?'ເງິນສົດ ເພີ່ມຂຶ້ນ':'ເງິນສົດ ຫຼຸດລົງ'])+kpi(`ເງິນສົດ ທ້າຍງວດ (${isoD(b)})`,m(close),'ພັນຢວນ',`ຂໍ້ມູນ Banking ຮອດ ${isoD(last)}`);
+  kpi('ກະແສເງິນສົດ ສຸດທິ',(net>0?'+':'')+m(net),'ພັນຢວນ',`${isoD(a)} – ${isoD(b)}`,[net>=0?'good':'warn',net>=0?'ເງິນສົດ ເພີ່ມຂຶ້ນ':'ເງິນສົດ ຫຼຸດລົງ']);
  $('#cfNote').textContent=`${isoD(a)} – ${isoD(b)} · ${rs.length} ລາຍການ · ${st.f==='all'?'ທັງ 2 ໂຮງງານ':FN[st.f]}`;
  const n=months.length+2,line=(lbl,f,cls,key)=>{const tot=f(null);return `<tr class="${cls||''}${key?' click':''}${key&&key===CF.sel?' on':''}"${key?` data-k="${key}"`:''}><td>${lbl}</td>${months.map(mo=>{const v=f(mo);return `<td class="n${v<0?' neg':''}">${Math.abs(v)<500?'—':m(v)}</td>`}).join('')}<td class="n${tot<0?' neg':''}"><b>${Math.abs(tot)<500?'—':m(tot)}</b></td></tr>`};
  const has=k=>G.some(([,g])=>g[1]===k);let t='';
