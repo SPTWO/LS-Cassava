@@ -550,10 +550,21 @@ function buildPages(type,start=0,total=null){
   <div class="rp-meta"><b>${st.f==='all'?'ພາບລວມ 2 ໂຮງງານ':'ໂຮງງານ '+FN[st.f]}</b><br>${pname()}<br>ອອກ Report: ${today}</div></div>
   <div class="rp-body"><div class="rp-inner">${rows.map(row=>`<div class="rp-row" style="grid-template-columns:${row.map(b=>`minmax(0,${b.w||1}fr)`).join(' ')}">${row.map(b=>cardHTML(b)).join('')}</div>`).join('')}</div></div>
   <div class="rp-foot"><span>ອັບເດດຂໍ້ມູນລ່າສຸດ: <b>${dfmt(lastData())}</b> · ${asOfTxt()}</span><span>ໜ້າ ${start+pi+1} / ${n}</span></div></div>`).join('');
- stage.querySelectorAll('.rp-page').forEach(pg=>{inlineSvg(pg);pg.querySelectorAll('.rp-card .tbl').forEach(w=>{const t=w.querySelector('table');let f=10.5;while(t&&t.scrollWidth>w.clientWidth+1&&f>7.5){f-=.5;t.style.fontSize=f+'px';t.querySelectorAll('td,th').forEach(c=>c.style.padding='3px 4px')}});const body=pg.querySelector('.rp-body'),inner=pg.querySelector('.rp-inner');const H=body.clientHeight,W=body.clientWidth,h=inner.scrollHeight;
+ stage.querySelectorAll('.rp-page').forEach(pg=>{inlineSvg(pg);pg.querySelectorAll('.rp-card .tbl').forEach(w=>{const t=w.querySelector('table');let f=10.5;while(t&&t.scrollWidth>w.clientWidth+1&&f>7.5){f-=.5;t.style.fontSize=f+'px';t.querySelectorAll('td,th').forEach(c=>c.style.padding='3px 4px')}});const body=pg.querySelector('.rp-body'),inner=pg.querySelector('.rp-inner');fitCharts(pg,body,inner);const H=body.clientHeight,W=body.clientWidth,h=inner.scrollHeight;
   if(h>H){const k=H/h;inner.style.transform=`scale(${k})`;inner.style.width=(W/k)+'px'}
   pg.querySelectorAll('*').forEach(el=>{const cs=getComputedStyle(el);if(cs.backgroundImage!=='none'){const r=el.getBoundingClientRect();if(r.width<4||r.height<4){el.style.backgroundImage='none';el.style.backgroundColor=cs.backgroundColor==='rgba(0, 0, 0, 0)'?'#1e8a45':cs.backgroundColor}}})});
  return [...stage.querySelectorAll('.rp-page')]}
+// report: let charts use the free space of the page and of their card (no tiny chart in a big empty card)
+function fitCharts(pg,body,inner){
+ const svgs=[...pg.querySelectorAll('.rp-card svg.chart')];if(!svgs.length)return;
+ const grow=(svg,px)=>{if(px<=1)return;const h=svg.getBoundingClientRect().height;const vb=svg.viewBox&&svg.viewBox.baseVal;const w=svg.parentElement.clientWidth;
+  const maxH=vb&&vb.width?w*vb.height/vb.width:Infinity;svg.style.maxHeight=Math.min(h+px,maxH)+'px'};
+ // 1) share the empty space at the bottom of the page between the rows that hold charts
+ const rows=[...new Set(svgs.map(s=>s.closest('.rp-row')))].filter(Boolean);const free=body.clientHeight-inner.scrollHeight-4;
+ if(free>8&&rows.length)rows.forEach(r=>r.querySelectorAll('svg.chart').forEach(s=>grow(s,free/rows.length)));
+ // 2) fill the remaining empty space inside each card (cards in a row are stretched to the tallest one)
+ svgs.forEach(svg=>{const card=svg.closest('.rp-card');const cb=card.getBoundingClientRect().bottom-parseFloat(getComputedStyle(card).paddingBottom);
+  const last=[...card.children].reduce((m,c)=>Math.max(m,c.getBoundingClientRect().bottom),0);grow(svg,cb-last-2)})}
 async function makePDF(type){
  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
