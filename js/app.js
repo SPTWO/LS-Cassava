@@ -333,14 +333,6 @@ function render(){
    const r=!P?null:isCost?achC(A,P):(t==='m'||t==='n')?ach(A,P):A/P;
    const neg=v=>(t==='m'||t==='n')&&v<0?' neg':'';
    return `<tr class="r-${t}"><td class="lbl">${n}</td>${COLS.map((_,j)=>`<td class="n pl${j?' gs':''}">${F(p[j])}</td><td class="n ac${neg(a[j])}">${F(a[j])}</td>`).join('')}<td class="n pl gs tt">${F(P)}</td><td class="n ac tt${neg(A)}">${F(A)}</td><td class="n tt ${Math.abs(d)<.5?'':good?'pos':'neg'}">${d>0?'+':''}${F(d)}</td><td class="tt">${!P?'—':isCost&&A>P?'<span class="pill over">ເກີນແຜນ</span>':achPill(r)}</td></tr>`}
- // stock
- const SK=k=>fs.reduce((t,f)=>t+STK[f][k],0);
- $('#kStock').innerHTML=kpi('ແປ້ງ On spec',fmt(SK('starch')),'ໂຕນ',`25 kg: ${fmt(SK('s25'))} · 850 kg: ${fmt(SK('s850'))}`)+kpi('ກາກມັນ',fmt(SK('pulp')),'ໂຕນ',`${fmt(+SET.pulp_price||0)} ຢວນ/ໂຕນ`)+kpi('ມັນຕົ້ນຄ້າງລານ',fmt(SK('raw')),'ໂຕນ',dfmt(LAST.proc),SK('raw')>150?['warn','! ຄວນເຂົ້າຜະລິດໄວ']:null)+kpi('ຄິດເປັນຕູ້ (28 ໂຕນ)',fmt(SK('starch')/28,1),'ຕູ້',`ສັນຍາຍັງເຫຼືອ ${fmt(contracts.filter(c=>fs.includes(c[0])).reduce((t,c)=>t+Math.max(0,c[4]-c[7]),0))} ໂຕນ`);
- let open=fs.reduce((t,f)=>t+STK[f].open,0);const rowsS=[...Array(NOWI+1).keys()].map(i=>{const pr=fs.reduce((t,f)=>t+act[f].prod[i],0),ex=fs.reduce((t,f)=>t+act[f].exp[i],0);const r=[M[i],open,pr,ex,open+pr-ex];open=r[4];return r});
- $('#tStock').innerHTML=`<thead><tr><th>ເດືອນ</th><th class="n">ຍົກມາ</th><th class="n">+ ຜະລິດ</th><th class="n">− ສົ່ງອອກ</th><th class="n">= ເຫຼືອ</th></tr></thead><tbody>`+rowsS.map((r,k)=>`<tr${k===rowsS.length-1?' class="total"':''}><td>${r[0]}</td>${r.slice(1).map(v=>`<td class="n">${fmt(v)}</td>`).join('')}</tr>`).join('')+'</tbody>';
- const lastPx=(SHIP.filter(s=>fs.includes(s.factory)).slice(-1)[0]||{}).price;
- $('#tStockVal').innerHTML=`<thead><tr><th>ລາຄາທີ່ໃຊ້</th><th class="n">ຢວນ/ໂຕນ</th><th class="n">ມູນຄ່າ (ຢວນ)</th></tr></thead><tbody>`+
-  [['ລາຄາສົ່ງອອກ ຄັ້ງລ່າສຸດ',+lastPx||0],['ຕົ້ນທຶນຕົວຈິງ ຕໍ່ ໂຕນ (ອ້າງອີງ)',UNIT.totA||0]].map(([n,p])=>`<tr><td>${n}</td><td class="n">${p?fmt(p):'—'}</td><td class="n">${p?fmt(SK('starch')*p):'—'}</td></tr>`).join('')+'</tbody>';
 }
 function pvaBlock(key,pre,fs){
  const P=M.map((_,i)=>fs.reduce((t,f)=>t+(plan[f][key][i]||0),0));
@@ -509,10 +501,13 @@ const REP={
  cost:{lo:'ຕົ້ນທຶນ & ກຳໄລ',en:'cost-profit',d:'ງົບກຳໄລ-ຂາດທຶນ ທຽບແຜນ',pages:[
    [[{id:'kCost',plain:1}],[{t:'ກຳໄລ/ຂາດທຶນ ສຸດທິ ລາຍເດືອນ (ລ້ານ ຢວນ)',id:'chNet',w:3},{t:'ແຍກໂຮງງານ (ລ້ານ ຢວນ)',id:'tPLf',w:2}],[{t:'ຕົ້ນທຶນ ຕໍ່ ແປ້ງ 1 ໂຕນ (ຢວນ/ໂຕນ, ຊະນະຄາມ)',id:'tUnit',w:3},{t:'ຈຸດສຳຄັນ',notes:1,w:2}]],
    [[{t:'ງົບກຳໄລ-ຂາດທຶນ ແຜນ VS ຕົວຈິງ (ຢວນ)',id:'tPL'}]]]},
- stock:{lo:'ສາງ',en:'stock',d:'ຍອດແປ້ງ, ກາກມັນ, ມັນຕົ້ນ',pages:[
-   [[{id:'kStock',plain:1}],[{t:'ການເຄື່ອນໄຫວສາງແປ້ງ (ໂຕນ)',id:'tStock'},{t:'ມູນຄ່າແປ້ງໃນສາງ',id:'tStockVal'}]]]},
  debt:{lo:'ພັນທະໜີ້ສິນ',en:'debt',d:'ເງິນກູ້, ຍອດເຫຼືອ, ການເບີກ-ຊຳລະ',pages:[
-   [[{id:'kDebt',plain:1}],[{t:'ເງິນກູ້ທະນາຄານ',id:'tDebt'}],[{t:'ການນຳໃຊ້ເງິນກູ້ ແລະ ຍອດໜີ້',id:'chBal',w:2},{t:'ປະຫວັດການເບີກ ແລະ ຊຳລະ',id:'tTx',w:3}]]]}};
+   [[{id:'kDebt',plain:1}],[{t:'ເງິນກູ້ທະນາຄານ',id:'tDebt'}],[{t:'ການນຳໃຊ້ເງິນກູ້ ແລະ ຍອດໜີ້',id:'chBal',w:2},{t:'ປະຫວັດການເບີກ ແລະ ຊຳລະ',id:'tTx',w:3}]]]},
+ cash:{lo:'ກະແສເງິນສົດ',en:'cash-flow',d:'ເງິນເຂົ້າ-ອອກ, ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ',pages:[
+   [[{id:'kCash',plain:1}],[{t:'ເງິນເຂົ້າ-ອອກ ແລະ ຍອດເງິນສົດ ລາຍເດືອນ (ພັນຢວນ)',id:'chCash',w:3},{t:'ຍອດເງິນ ແຕ່ລະບັນຊີ',id:'tCashBal',w:2}]],
+   [[{t:'ງົບກະແສເງິນສົດ (ພັນຢວນ)',id:'tCash'}]],
+   [[{id:'kLoanUse',plain:1}],[{t:'ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍເດືອນ (ພັນຢວນ)',id:'tLoanM'}]]],
+   xls:[{t:'ເງິນກູ້ ແລະ ການນຳໃຊ້ເງິນ ລາຍວັນ',id:'tLoanD'}]}};
 const rs={sel:['overview'],fmt:'pdf'};
 const loadScript=src=>new Promise((ok,no)=>{if(document.querySelector(`script[src="${src}"]`))return ok();const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error('load'));document.head.appendChild(e)});
 function scopeText(){return `${st.f==='all'?'ພາບລວມ 2 ໂຮງງານ':'ໂຮງງານ '+FN[st.f]} · ${pname()}`}
@@ -547,7 +542,7 @@ function cloneBlock(b){
  return html}
 function inlineSvg(root){root.querySelectorAll('svg, svg *').forEach(el=>{const cs=getComputedStyle(el);['fill','stroke','stroke-width','stroke-dasharray','font-size','font-family','opacity'].forEach(p=>{const v=cs.getPropertyValue(p);if(v)el.style.setProperty(p,v)})});root.querySelectorAll('.hit').forEach(h=>h.remove())}
 function cardHTML(b){if(b.stack)return `<div class="rp-stack">${b.stack.map(cardHTML).join('')}</div>`;return b.plain?`<div class="rp-plain">${cloneBlock(b)}</div>`:`<div class="rp-card">${b.t?`<h3>${b.t}</h3>`:''}${cloneBlock(b)}</div>`}
-const REP_ORDER=['overview','procure','produce','sales','cost','stock','debt'];
+const REP_ORDER=['overview','procure','produce','sales','cost','debt','cash'];
 function buildPages(type,start=0,total=null){
  const r=REP[type],stage=$('#repStage');const logo=document.querySelector('.brand img').src;const today=dfmt(new Date());
  const n=total||r.pages.length;
@@ -576,7 +571,7 @@ function makeXLSX(type){
  r.pages.flat(2).forEach(b=>{const el=b.id&&document.getElementById(b.id);if(!el)return;el.querySelectorAll('.kpi').forEach(k=>info.push([k.querySelector('.lbl')?.textContent.trim(),k.querySelector('.v')?.textContent.trim(),k.querySelector('.d')?.textContent.trim()]));
   el.querySelectorAll('.step').forEach(k=>info.push([k.querySelector('.lbl')?.textContent.trim(),k.querySelector('.big')?.textContent.trim(),k.querySelector('.sub')?.textContent.trim()]))});
  const ws0=XLSX.utils.aoa_to_sheet(info);ws0['!cols']=[{wch:28},{wch:22},{wch:48}];XLSX.utils.book_append_sheet(wb,ws0,'ສະຫຼຸບ');
- r.pages.flat(2).forEach(b=>{if(!b.id||!b.t)return;const el=document.getElementById(b.id);const tb=el&&(el.tagName==='TABLE'?el:null);if(!tb)return;
+ [...r.pages.flat(2),...(r.xls||[])].forEach(b=>{if(!b.id||!b.t)return;const el=document.getElementById(b.id);const tb=el&&(el.tagName==='TABLE'?el:null);if(!tb)return;
   let name=b.t.replace(/[\\\/\?\*\[\]:]/g,' ').slice(0,30).trim();while(used.has(name))name=name.slice(0,28)+'_2';used.add(name);
   const ws=XLSX.utils.table_to_sheet(tb,{raw:false});XLSX.utils.book_append_sheet(wb,ws,name)});
  // monthly plan vs actual data
@@ -591,8 +586,8 @@ function makeXLSXAll(LIST=REP_ORDER){
   el.querySelectorAll('.kpi').forEach(k=>info.push([k.querySelector('.lbl')?.textContent.trim(),k.querySelector('.v')?.textContent.trim(),k.querySelector('.d')?.textContent.trim()]));
   el.querySelectorAll('.step').forEach(k=>info.push([k.querySelector('.lbl')?.textContent.trim(),k.querySelector('.big')?.textContent.trim(),k.querySelector('.sub')?.textContent.trim()]))});info.push([])});
  const ws0=XLSX.utils.aoa_to_sheet(info);ws0['!cols']=[{wch:30},{wch:22},{wch:52}];XLSX.utils.book_append_sheet(wb,ws0,'ສະຫຼຸບ');used.add('ສະຫຼຸບ');
- const SH={overview:'ພາບລວມ',procure:'ເກັບຊື້',produce:'ຜະລິດ',sales:'ສົ່ງອອກ',cost:'ຕົ້ນທຶນ',stock:'ສາງ',debt:'ໜີ້ສິນ'};const seen=new Set();
- LIST.forEach(t=>REP[t].pages.flat(2).flatMap(b=>b.stack?b.stack:[b]).forEach(b=>{if(!b.id||!b.t||seen.has(b.id))return;const el=document.getElementById(b.id);if(!el||el.tagName!=='TABLE')return;seen.add(b.id);
+ const SH={overview:'ພາບລວມ',procure:'ເກັບຊື້',produce:'ຜະລິດ',sales:'ສົ່ງອອກ',cost:'ຕົ້ນທຶນ',debt:'ໜີ້ສິນ',cash:'ກະແສເງິນສົດ'};const seen=new Set();
+ LIST.forEach(t=>[...REP[t].pages.flat(2),...(REP[t].xls||[])].flatMap(b=>b.stack?b.stack:[b]).forEach(b=>{if(!b.id||!b.t||seen.has(b.id))return;const el=document.getElementById(b.id);if(!el||el.tagName!=='TABLE')return;seen.add(b.id);
   let name=(SH[t]+' · '+b.t).replace(/[\\\/\?\*\[\]:]/g,' ').slice(0,31).trim();let k=2;while(used.has(name)){name=name.slice(0,28)+'_'+k++}used.add(name);
   XLSX.utils.book_append_sheet(wb,XLSX.utils.table_to_sheet(el,{raw:false}),name)}));
  const fs=facs();const rows=[['ເດືອນ','ແຜນ ເກັບຊື້ (ໂຕນ)','ຕົວຈິງ ເກັບຊື້ (ໂຕນ)','ແຜນ ຜະລິດ (ໂຕນ)','ຕົວຈິງ ຜະລິດ (ໂຕນ)','ແຜນ ສົ່ງອອກ (ໂຕນ)','ຕົວຈິງ ສົ່ງອອກ (ໂຕນ)']];
